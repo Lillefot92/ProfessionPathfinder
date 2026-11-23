@@ -65,6 +65,7 @@ It adds a craft button, tells you where to gather your own materials, and helps 
 When the trainer skill for a recipe isn't known yet, the planner waits until the recipe turns yellow. That is always safe, just sometimes later than needed.
 
 ### Known limits
+- **Tested in game on Horde only so far.** Alliance trainers, vendors and zones are included, but they haven't been tested in game yet. Full Alliance testing is coming: please report anything that looks wrong.
 - Recipes that only **drop** or come from **quests** aren't planned, because you can't count on getting them. They're shown in tooltips so you know they exist.
 - Recipes no item teaches are assumed to come from a trainer (marked "probably"). The exact skill and price are known once you open a trainer window that lists them: trainers only show recipes up to your current rank, so open the trainer at each rank.
 - Locations come from QuestieDB. Some new WoW Forever areas (such as Zephras Isle and the Riverglades) aren't fully in it yet, so their trainers may be missing.
