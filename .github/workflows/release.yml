@@ -1,0 +1,24 @@
+name: Package and release
+
+# Push a version tag (git tag v1.0.0 && git push --tags) to build the zip.
+# It's attached to a GitHub release. CurseForge uploads start once the
+# CF_API_KEY secret is added (Settings > Secrets and variables > Actions)
+# and the project ID is in the .toc (## X-Curse-Project-ID).
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
+      CF_API_KEY: ${{ secrets.CF_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: BigWigsMods/packager@v2

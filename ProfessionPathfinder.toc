@@ -1,0 +1,24 @@
+## Interface: 16001
+## Title: Profession Pathfinder
+## Notes: Plans the cheapest way to level your professions from the game's own recipe data: what to craft, what to learn and where (trainers, vendors), a shopping list with Auctionator prices, a craft button, where to gather, and fishing help.
+## Version: 1.0.0
+## Author: Krigar Kossan
+## X-License: GPL-3.0-or-later
+## Category: Professions
+## SavedVariables: ProfessionPathfinderDB
+## OptionalDeps: Auctionator
+## AddonCompartmentFunc: ProfessionPathfinder_Compartment
+## IconTexture: Interface\Icons\Trade_BlackSmithing
+
+Core.lua
+Data.lua
+TrainerData.lua
+Sources.lua
+Trainer.lua
+Where.lua
+Gathering.lua
+Learn.lua
+Planner.lua
+UI.lua
+Fishing.lua
+Diagnose.lua
