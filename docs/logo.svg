@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3fd0ff"/><stop offset="1" stop-color="#3a5bff"/>
+    </linearGradient>
+    <radialGradient id="sea" cx="0.5" cy="0.45" r="0.6">
+      <stop offset="0" stop-color="#7fe8ff"/><stop offset="1" stop-color="#2fa6e8"/>
+    </radialGradient>
+    <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff3c4"/><stop offset="1" stop-color="#f3cf7a"/>
+    </linearGradient>
+    <linearGradient id="potion" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ff6ad5"/><stop offset="1" stop-color="#a020ff"/>
+    </linearGradient>
+  </defs>
+  <rect x="16" y="16" width="480" height="480" rx="110" fill="url(#sky)" stroke="#1b1f5e" stroke-width="14"/>
+  <g fill="#ffffff" opacity="0.35">
+    <circle cx="96" cy="92" r="6"/><circle cx="420" cy="80" r="8"/><circle cx="440" cy="150" r="4"/><circle cx="70" cy="400" r="5"/>
+  </g>
+  <!-- map -->
+  <g transform="rotate(-8 256 270)">
+    <path d="M92 150 Q170 128 256 150 Q342 172 420 150 L420 380 Q342 402 256 380 Q170 358 92 380 Z" fill="url(#paper)" stroke="#1b1f5e" stroke-width="12" stroke-linejoin="round"/>
+    <path d="M178 141 L178 371 M334 160 L334 390" stroke="#d9a94c" stroke-width="5" stroke-dasharray="4 10" fill="none"/>
+    <path d="M112 300 Q140 250 190 270 Q230 285 214 330 Q190 360 140 350 Q104 340 112 300 Z" fill="#5be36b" stroke="#1b1f5e" stroke-width="7"/>
+    <path d="M300 200 Q340 175 380 200 Q402 225 380 255 Q340 270 312 250 Q285 230 300 200 Z" fill="#5be36b" stroke="#1b1f5e" stroke-width="7"/>
+  </g>
+  <!-- trail to the pin -->
+  <path d="M165 318 Q205 250 255 262 Q305 274 352 214" fill="none" stroke="#ff3d5a" stroke-width="10" stroke-linecap="round" stroke-dasharray="2 20"/>
+  <ellipse cx="360" cy="214" rx="22" ry="8" fill="#1b1f5e" opacity="0.25"/>
+  <!-- potion bottle -->
+  <g transform="translate(78 330) rotate(-12)">
+    <rect x="34" y="-6" width="30" height="30" rx="6" fill="#c98b4d" stroke="#1b1f5e" stroke-width="8"/>
+    <path d="M30 22 L68 22 L68 44 Q110 70 100 118 Q92 150 49 150 Q6 150 -2 118 Q-12 70 30 44 Z" fill="url(#potion)" stroke="#1b1f5e" stroke-width="9" stroke-linejoin="round"/>
+    <path d="M10 92 Q50 104 90 92 Q98 118 86 132 Q50 146 12 132 Q0 116 10 92 Z" fill="#ffd1f4" opacity="0.5"/>
+    <circle cx="30" cy="70" r="9" fill="#fff" opacity="0.8"/>
+    <circle cx="70" cy="110" r="6" fill="#fff" opacity="0.6"/>
+  </g>
+  <!-- hammer -->
+  <g transform="translate(338 282) rotate(30)">
+    <rect x="44" y="40" width="26" height="140" rx="10" fill="#ffb347" stroke="#1b1f5e" stroke-width="9"/>
+    <rect x="0" y="0" width="116" height="56" rx="14" fill="#c7d3ff" stroke="#1b1f5e" stroke-width="10"/>
+    <rect x="12" y="10" width="40" height="12" rx="6" fill="#fff" opacity="0.8"/>
+  </g>
+  <!-- map pin -->
+  <g transform="translate(310 62)">
+    <path d="M50 150 Q-10 70 10 34 Q30 0 50 0 Q70 0 90 34 Q110 70 50 150 Z" fill="#ff3d5a" stroke="#1b1f5e" stroke-width="10" stroke-linejoin="round"/>
+    <circle cx="50" cy="46" r="20" fill="#fff6d6" stroke="#1b1f5e" stroke-width="7"/>
+    <path d="M28 20 Q38 10 52 10" stroke="#fff" stroke-width="6" stroke-linecap="round" fill="none" opacity="0.7"/>
+  </g>
+  <!-- sparkles -->
+  <g fill="#fff36b" stroke="#1b1f5e" stroke-width="5" stroke-linejoin="round">
+    <path d="M110 110 l10 -26 l10 26 l26 10 l-26 10 l-10 26 l-10 -26 l-26 -10 z"/>
+    <path d="M420 250 l7 -18 l7 18 l18 7 l-18 7 l-7 18 l-7 -18 l-18 -7 z"/>
+  </g>
+</svg>
