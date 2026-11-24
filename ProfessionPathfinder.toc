@@ -4,6 +4,7 @@
 ## Version: 1.0.0
 ## Author: Krigar Kossan
 ## X-License: GPL-3.0-or-later
+## X-Curse-Project-ID: 1826625
 ## Category: Professions
 ## SavedVariables: ProfessionPathfinderDB
 ## OptionalDeps: Auctionator
