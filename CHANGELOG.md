@@ -9,7 +9,6 @@ Gather & craft mode, and net cost.
 - Cloth (Linen to Runecloth) is listed with the humanoid levels that drop it and where to farm them
 - Materials you can gather right now come first; ones that need a higher gathering skill are left for later
 - Gathering, cloth and fishing zones now fit your character's level: only zones you can handle are suggested, or the easiest one with its level (like "Badlands (level 35+)")
-
 - Shows what you'd get back for what you craft (selling to a vendor, or vendor or Auction House, whichever pays more, with Auctionator prices after the 5% cut), and what the plan costs after that
 - New option "Pick recipes by cost after selling": cheaper in the end, but it can need much more gold up front, so it's off by default
 - Things the plan uses later, like bars for your next recipe, aren't counted as sold
