@@ -555,8 +555,7 @@ function SP.RankHow(profName, rank)
 			return horde and "the Expert Cookbook (Wulan, Shadowprey Village, Desolace)" or "the Expert Cookbook (Shandrina, Mystral Lake, Ashenvale)"
 		end
 		if rank == "Artisan" then
-			return "the quest Clamlette Surprise (from " .. (horde and "Zamja in Orgrimmar" or "Daryl Riknussun in Ironforge")
-				.. ", turned in to Dirge Quikcleave in Gadgetzan)"
+			return "the quest Clamlette Surprise (Dirge Quikcleave, Gadgetzan, Tanaris)"
 		end
 	end
 	return "your trainer"

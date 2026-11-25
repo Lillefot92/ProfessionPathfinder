@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.0
+
+Alliance support.
+
+- Checked every profession and rank for the Alliance: trainers, the Expert books and Artisan quests for First Aid, Cooking and Fishing, recipe vendors and gathering zones all point to Alliance (or neutral) places
+- Plans reach the same skill for Alliance as for Horde in every profession
+- Fixed the backup text for Artisan Cooking: the quest Clamlette Surprise comes from Dirge Quikcleave in Gadgetzan for both factions
+- Added Redridge Mountains as a closer Alliance zone for Tin and Silver
+
 ## 1.0.0
 
 First release.

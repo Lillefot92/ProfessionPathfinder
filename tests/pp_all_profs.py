@@ -86,6 +86,13 @@ for line in [129, 164, 165, 171, 185, 197, 202, 333]:
     BOX[line] = stuck
     # the last points often need drop or Auction House recipes
     assert stuck is None or stuck >= 280, (line, text)
+# the same out of the box for the Alliance
+lua.execute("function UnitFactionGroup() return 'Alliance' end")
+for line in [129, 164, 165, 171, 185, 197, 202, 333]:
+    text, stuck = G.Sim(line, "box")
+    print("box A", line, text)
+    assert stuck is None or stuck >= 280, ("Alliance", line, text)
+lua.execute("function UnitFactionGroup() return 'Horde' end")
 lua.execute("""
 local SP = ProfessionPathfinder
 -- Tailoring 75 -> 150 with only Apprentice trainer data: must end at the trainer

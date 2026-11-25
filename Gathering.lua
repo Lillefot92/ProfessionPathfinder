@@ -19,8 +19,8 @@ SP.Gathering = {
 			{ "Truesilver", 230 }, { "Dark Iron", 230 }, { "Thorium", 245 }, { "Rich Thorium", 275 } },
 		route = {
 			Z(1, 65, "Copper", "Elwynn Forest", "Durotar", "Smelting Copper also gives skill to about 65."),
-			Z(65, 75, "Tin", "Wetlands", "Silverpine Forest or Hillsbrad Foothills", "Smelt Tin too."),
-			Z(75, 125, "Silver and Tin", "Wetlands", "Silverpine Forest or Hillsbrad Foothills", "Smelting Bronze gives skill to about 105."),
+			Z(65, 75, "Tin", "Redridge Mountains or Wetlands", "Silverpine Forest or Hillsbrad Foothills", "Smelt Tin too."),
+			Z(75, 125, "Silver and Tin", "Redridge Mountains or Wetlands", "Silverpine Forest or Hillsbrad Foothills", "Smelting Bronze gives skill to about 105."),
 			Z(125, 155, "Iron", "Thousand Needles or Arathi Highlands", nil, "Smelting Iron (from 130) gives skill to about 140."),
 			Z(155, 175, "Gold and Iron", "Arathi Highlands, Thousand Needles or Desolace", nil, "Smelting Gold gives skill to about 185: a few Gold Bars get you to 175 for Mithril."),
 			Z(175, 245, "Mithril (Truesilver from 230)", "The Hinterlands or Tanaris"),
