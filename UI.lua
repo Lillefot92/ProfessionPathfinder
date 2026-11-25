@@ -585,6 +585,8 @@ function UI:Show(prof, plan, loading)
 		notes[#notes + 1] = "You can learn |cffffffff" .. rs.rank .. "|r" .. (rs.levelOK and " now" or (" at character level " .. rs.level)) .. " (cap " .. rs.cap .. ")"
 			.. " from " .. SP.RankHow(prof.name, rs.rank) .. "."
 	end
+	local specText = SP.SpecNote and SP.SpecNote(prof, plan)
+	if specText then notes[#notes + 1] = specText end
 	if gatherCount > 0 and not plan.selfGather then
 		notes[#notes + 1] = "|cff40bf40Green items|r you can gather yourself" .. (gatherSave > 0 and (": saves about " .. SP.Money(gatherSave)) or "") .. "."
 	end
@@ -592,7 +594,7 @@ function UI:Show(prof, plan, loading)
 		local z = SP.GatherZone("Mining", prof.skill)
 		notes[#notes + 1] = "Mining also rises from mining ore nodes" .. (z and (": " .. z.what .. " in " .. SP.ZoneFor(z)) or "") .. "."
 	end
-	local seen = SP.db.known and SP.db.known[(UnitName and UnitName("player") or "?") .. "-" .. (GetRealmName and GetRealmName() or "")] or {}
+	local seen = SP.db.known and SP.db.known[SP.MyKey()] or {}
 	-- Only professions that use metal bars care about smelting
 	local usesBars = prof.name == "Blacksmithing" or prof.name == "Engineering"
 	for _, name in ipairs(usesBars and SP.MyProfessions() or {}) do

@@ -79,6 +79,12 @@ function SP.Diagnose()
 	end
 	out[#out + 1] = "Profession: " .. tostring(prof.name) .. " " .. prof.skill .. "/" .. prof.max
 		.. " (id " .. tostring(prof.id) .. ", skill line " .. tostring(prof.enum) .. ")"
+	if SP.MySpecs and SP.SPECS then
+		local have = {}
+		for spec in pairs(SP.MySpecs()) do have[#have + 1] = SP.SPECS[spec] and SP.SPECS[spec][1] or tostring(spec) end
+		table.sort(have)
+		out[#out + 1] = "Specializations: " .. (#have > 0 and table.concat(have, ", ") or "none") .. "  (character key " .. SP.MyKey() .. ")"
+	end
 
 	local ok, ids = pcall(T.GetAllRecipeIDs)
 	ids = ok and type(ids) == "table" and ids or {}

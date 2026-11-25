@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2.1
+
+Specializations, and characters on realms whose name the game doesn't always give.
+
+- Recipes only a specialist can learn (Armorsmith, Weaponsmith and the Master Axe-, Hammer- and Swordsmiths, Gnomish and Goblin Engineers, Dragonscale, Elemental and Tribal Leatherworkers) are only planned for that specialist, and you're sent to the specialization trainer to learn them. Before, plans could include Truesilver Gauntlets or Truesilver Champion for any blacksmith
+- When you can pick a specialization, the window says so and who to talk to
+- `/ppf scan` shows the specializations it sees on your character
+- The game sometimes gives an empty realm name on Forever. Things saved then (like "Krigar-") now move to your full character name once the realm is known, instead of being kept twice
+
 ## 1.2.0
 
 Gather & craft mode, and net cost.

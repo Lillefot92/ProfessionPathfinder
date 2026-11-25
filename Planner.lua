@@ -78,6 +78,20 @@ function SP.MakePlan(prof, recipes, db, others, candidates)
 	if target <= skill then plan.done = true return plan end
 
 	candidates = candidates or {}
+	-- recipes only a specialist can learn: only if you're that specialist
+	if SP.SpecBlocks then
+		local have, keep = SP.MySpecs(), {}
+		for _, r in ipairs(candidates) do
+			local spec = SP.SpecBlocks(r.id, have)
+			if spec then
+				plan.specSkipped = plan.specSkipped or {}
+				plan.specSkipped[spec] = (plan.specSkipped[spec] or 0) + 1
+			else
+				keep[#keep + 1] = r
+			end
+		end
+		candidates = keep
+	end
 	local taught = {}
 	plan.trainCost = 0
 

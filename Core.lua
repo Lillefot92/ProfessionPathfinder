@@ -447,10 +447,59 @@ end
 -- Your characters: professions and where each one stands (saved for the
 -- whole account, updated whenever you log in or open a profession).
 ---------------------------------------------------------------------------
+-- The game doesn't always give the realm name on Forever (it can be empty,
+-- even well after login). Until it's known, the key is "Name-"; once it is,
+-- anything saved under "Name-" moves to "Name-Realm".
+local function RealmName()
+	for _, try in ipairs({
+		function() return GetRealmName() end,
+		function() return GetNormalizedRealmName() end,
+		function() return select(2, UnitFullName("player")) end,
+	}) do
+		local ok, r = pcall(try)
+		if ok and type(r) == "string" and r ~= "" and not (issecretvalue and issecretvalue(r)) then return r end
+	end
+end
+
+function SP.MergeEmptyRealm(old, full)
+	local db = SP.db
+	if not db or old == full then return end
+	for _, name in ipairs({ "chars", "known" }) do
+		local t = db[name]
+		if t and t[old] then
+			if not t[full] then
+				t[full] = t[old]
+			elseif name == "known" then
+				for k, v in pairs(t[old]) do if t[full][k] == nil then t[full][k] = v end end
+			elseif (t[old].updated or 0) > (t[full].updated or 0) then
+				t[full] = t[old]
+			end
+			t[old] = nil
+		end
+	end
+	for _, name in ipairs({ "said", "legacyNear" }) do
+		local t, moves = db[name], {}
+		for k, v in pairs(t or {}) do
+			if type(k) == "string" and k:sub(1, #old + 1) == old .. ":" then moves[k] = v end
+		end
+		for k, v in pairs(moves) do
+			t[full .. k:sub(#old + 1)] = v
+			t[k] = nil
+		end
+	end
+end
+
 local function MyKey()
 	local name = UnitName and UnitName("player") or "?"
-	local realm = GetRealmName and GetRealmName() or ""
-	return name .. "-" .. realm
+	if type(name) ~= "string" or (issecretvalue and issecretvalue(name)) then name = "?" end
+	local realm = SP.realm or RealmName()
+	if realm and SP.db then
+		if not SP.realm then
+			SP.realm = realm
+			SP.MergeEmptyRealm(name .. "-", name .. "-" .. realm)
+		end
+	end
+	return name .. "-" .. (realm or "")
 end
 SP.MyKey = MyKey
 
@@ -482,6 +531,87 @@ function SP.SaveCharacter()
 		end
 	end
 	c.updated = time and time() or 0
+end
+
+---------------------------------------------------------------------------
+-- Specializations (Armorsmith, Weaponsmith, Gnomish/Goblin Engineer,
+-- Dragonscale/Elemental/Tribal Leatherworking): some recipes only a
+-- specialist can learn.
+---------------------------------------------------------------------------
+local function KnowsSpell(id)
+	for _, try in ipairs({
+		function() return IsPlayerSpell(id) end,
+		function() return C_SpellBook.IsSpellKnown(id) end,
+		function() return IsSpellKnown(id) end,
+	}) do
+		local ok, v = pcall(try)
+		if ok and v == true then return true end
+	end
+	return false
+end
+
+-- Specializations this character has (spell IDs), from the spell book and
+-- from specialist recipes it already knows
+function SP.MySpecs()
+	local have = {}
+	local c = SP.db and SP.db.chars and SP.db.chars[MyKey()]
+	for spec in pairs(SP.SPECS or {}) do
+		if KnowsSpell(spec) or (c and c.specs and c.specs[spec]) then have[spec] = true end
+	end
+	-- a Master Axe-, Hammer- or Swordsmith is a Weaponsmith too
+	for spec, d in pairs(SP.SPECS or {}) do
+		if have[spec] and d[5] then have[d[5]] = true end
+	end
+	return have
+end
+
+-- Note a specialization when you know one of its recipes
+function SP.NoteSpecRecipes(recipes)
+	if not (SP.SPEC_RECIPES and SP.db and SP.db.chars) then return end
+	for _, r in ipairs(recipes or {}) do
+		local spec = r.learned ~= false and not r.unlearned and SP.SPEC_RECIPES[r.id]
+		if spec then
+			SP.SaveCharacter()
+			local c = SP.db.chars[MyKey()]
+			c.specs = c.specs or {}
+			c.specs[spec] = true
+		end
+	end
+end
+
+-- The specialization a recipe needs, if you don't have it
+function SP.SpecBlocks(recipeID, have)
+	local spec = SP.SPEC_RECIPES and SP.SPEC_RECIPES[recipeID]
+	if not spec then return nil end
+	have = have or SP.MySpecs()
+	if have[spec] then return nil end
+	return spec
+end
+
+-- The nearest trainer (or quest giver) for a specialization
+function SP.SpecTrainer(spec, start)
+	local d = SP.SPECS and SP.SPECS[spec]
+	if not d then return nil end
+	return SP.SortByDistance and SP.SortByDistance(start and d[7] or d[6])[1]
+end
+
+-- For a profession: specializations you could pick now (none yet, or the
+-- next step), and their names
+function SP.SpecChoice(line, skill, level)
+	local have = SP.MySpecs()
+	local choices = {}
+	for spec, d in pairs(SP.SPECS or {}) do
+		if d[2] == line and not have[spec] and (not d[5] or have[d[5]]) then
+			-- only if you don't already have one at this level
+			local taken = false
+			for other, o in pairs(SP.SPECS) do
+				if other ~= spec and o[2] == line and o[5] == d[5] and have[other] then taken = true end
+			end
+			if not taken then choices[#choices + 1] = { spec = spec, name = d[1], skill = d[3], level = d[4], ready = skill >= d[3] and (level or 0) >= d[4] } end
+		end
+	end
+	table.sort(choices, function(a, b) return a.name < b.name end)
+	return choices
 end
 
 -- After planning: remember what's next for this profession on this character.
@@ -638,11 +768,7 @@ end
 -- Recipes from your other professions (e.g. Mining's smelting for
 -- Blacksmithing bars). Saved per character when you open each window.
 ---------------------------------------------------------------------------
-local function CharKey()
-	local name = UnitName and UnitName("player") or "?"
-	local realm = GetRealmName and GetRealmName() or ""
-	return name .. "-" .. realm
-end
+local CharKey = MyKey
 
 function SP.RememberRecipes(prof, recipes)
 	if not (prof and prof.name) then return end
@@ -722,6 +848,7 @@ function SP.Refresh()
 	pcall(SP.SaveCharacter)
 	local recipes = prof and SP.ScanRecipes() or nil
 	if prof and recipes and #recipes > 0 then SP.RememberRecipes(prof, recipes) end
+	if prof and recipes then pcall(SP.NoteSpecRecipes, recipes) end
 	if prof and recipes and SP.ObserveRecipes then pcall(SP.ObserveRecipes, prof, recipes) end
 	if prof and SP.Trainer then pcall(SP.Trainer.Match, prof.label or prof.name) end
 	if prof and recipes then SP.AddColors(recipes, prof.id) end

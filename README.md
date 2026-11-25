@@ -46,6 +46,7 @@ Download it on [CurseForge](https://www.curseforge.com/wow/addons/profession-pat
 - Works for both Horde and Alliance. Horde has had the most time in game so far, so if anything looks off on the Alliance side, let me know.
 - Recipes that only drop or come from quests aren't part of the plan, since you can't count on getting them. They still show up in the tooltips.
 - Recipes no item teaches are treated as trainer recipes and marked "(learn?)" until you've opened a trainer that lists them. Trainers only show recipes up to your current rank, so visit the trainer at each rank.
+- Specializations (Armorsmith, Weaponsmith, Gnomish/Goblin Engineering, Dragonscale/Elemental/Tribal Leatherworking) are supported: recipes only a specialist can learn are planned only for that specialist.
 - Some trainers in the new Forever zones (Zephras Isle, Riverglades) may be missing for now.
 - Skill-ups are random, so the craft counts are estimates.
 

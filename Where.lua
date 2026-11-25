@@ -255,7 +255,63 @@ function SP.LearnWhere(prof, e)
 	if how == "vendor" and e.where then
 		return (item or "the recipe") .. " from " .. e.where.name .. " in " .. SP.NpcPlace(e.where), e.where
 	end
+	-- a specialist's recipe: the specialization trainer
+	local id = e.id or (e.recipe and e.recipe.id)
+	local spec = id and SP.SPEC_RECIPES and SP.SPEC_RECIPES[id]
+	local st = spec and SP.SpecTrainer(spec)
+	if st then return st.name .. " in " .. SP.NpcPlace(st), st end
 	local t = SP.RecipeTrainer(prof and prof.name, e.learnAt or e.from)
 	if t then return t.name .. " in " .. SP.NpcPlace(t), t end
 	return "your trainer"
+end
+
+---------------------------------------------------------------------------
+-- Specializations: a note when you can pick one
+---------------------------------------------------------------------------
+-- "Armorsmith or Weaponsmith: talk to Krathok Moltenfist in Orgrimmar"
+function SP.SpecNote(prof, plan)
+	if not (prof and SP.SpecChoice) then return nil end
+	local level = UnitLevel and UnitLevel("player")
+	if issecretvalue and issecretvalue(level) then level = nil end
+	local ready = {}
+	for _, c in ipairs(SP.SpecChoice(prof.id, prof.skill, level or 0)) do
+		-- for a while after it becomes possible (or while the plan leaves recipes out)
+		if c.ready and (prof.skill < c.skill + 50 or (plan and plan.specSkipped)) then ready[#ready + 1] = c end
+	end
+	if #ready == 0 then return nil end
+	local groups, order = {}, {}
+	for _, c in ipairs(ready) do
+		local npc = SP.SpecTrainer(c.spec, true)
+		local key = npc and npc.name or "?"
+		if not groups[key] then groups[key] = { npc = npc, names = {} }; order[#order + 1] = key end
+		table.insert(groups[key].names, c.name)
+	end
+	-- all in one zone (the Master trainers in Everlook): one line
+	local zone, same = nil, #order > 1
+	for _, key in ipairs(order) do
+		local npc = groups[key].npc
+		if not npc then same = false elseif zone == nil then zone = npc.zone elseif npc.zone ~= zone then same = false end
+	end
+	if same then
+		local names, who = {}, {}
+		for _, key in ipairs(order) do
+			for _, n in ipairs(groups[key].names) do names[#names + 1] = n end
+			who[#who + 1] = key
+		end
+		local function Or(t) return #t > 1 and (table.concat(t, ", ", 1, #t - 1) .. " or " .. t[#t]) or t[1] end
+		local text = "You can specialize now: |cffffffff" .. Or(names) .. "|r (talk to " .. Or(who) .. " in " .. zone .. ")."
+		if plan and plan.specSkipped then text = text .. " Recipes only a specialist can learn are left out of the plan until then." end
+		return text
+	end
+	local parts = {}
+	for _, key in ipairs(order) do
+		local g = groups[key]
+		local names = table.concat(g.names, " or ")
+		parts[#parts + 1] = "|cffffffff" .. names .. "|r" .. (g.npc and (" (talk to " .. g.npc.name .. " in " .. SP.NpcPlace(g.npc) .. ")") or "")
+	end
+	local text = "You can specialize now: " .. table.concat(parts, ", or ") .. "."
+	if plan and plan.specSkipped then
+		text = text .. " Recipes only a specialist can learn are left out of the plan until then."
+	end
+	return text
 end

@@ -2,15 +2,19 @@
 Profession Pathfinder, from QuestieDB's WoW Forever database (GPL-3.0,
 https://github.com/Questie/QuestieDB) and the game's own names.
 
-usage: make_sources.py <QuestieDB checkout> <Data.lua> <names> <out Sources.lua>
+usage: make_sources.py <QuestieDB checkout> <Data.lua> <names> <out Sources.lua> [ItemSparse.csv]
 
 <names> is a SavedVariables file with ProfessionPathfinderDB.export, written
 in game by /ppf export (spell names of every recipe in Data.lua, and the skill
-each recipe item needs). It links recipe items to recipe spells by name."""
+each recipe item needs). It links recipe items to recipe spells by name.
+
+ItemSparse.csv (the game's item table, from wago.tools for the same build)
+tells which recipe items need a specialization (RequiredAbility)."""
 import os, re, sys
 from lupa import LuaRuntime
 
 QDB, DATA_LUA, NAMES, OUT = sys.argv[1:5]
+ITEMSPARSE = sys.argv[5] if len(sys.argv) > 5 else None
 L = LuaRuntime(unpack_returned_tuples=True)
 
 def lua_items(t):
@@ -196,6 +200,48 @@ for prof in sorted(special):
         else:
             special_rows.setdefault(prof, []).append((rank, "quest", [(qid, quest_starts(qid)) for qid in x], None))
 
+# ---------------------------------------------------------------- specializations
+# (spell, name, profession line, skill, level, needs this spec first, trainers, who starts it)
+SPECS = [
+    (9788, "Armorsmith", 164, 200, 40, None, [11177, 5164], [11176, 11145]),
+    (9787, "Weaponsmith", 164, 200, 40, None, [11178, 11146], [11176, 11145]),
+    (17041, "Master Axesmith", 164, 250, 50, 9787, [11192], [11192]),
+    (17040, "Master Hammersmith", 164, 250, 50, 9787, [11191], [11191]),
+    (17039, "Master Swordsmith", 164, 250, 50, 9787, [11193], [11193]),
+    (20219, "Gnomish Engineer", 202, 200, 30, None, [7944, 7406], [7944, 7406]),
+    (20222, "Goblin Engineer", 202, 200, 30, None, [8126, 8738], [8126]),
+    (10656, "Dragonscale Leatherworking", 165, 225, 40, None, [7866, 7867], [7866, 7867]),
+    (10658, "Elemental Leatherworking", 165, 225, 40, None, [7868, 7869], [7868, 7869]),
+    (10660, "Tribal Leatherworking", 165, 225, 40, None, [7870, 7871], [7870, 7871]),
+]
+# Taught only by a specialization trainer (no item, so the game data can't tell)
+SPEC_TRAINER_RECIPES = {
+    9788: [9954, 9974],                    # Truesilver Gauntlets, Truesilver Breastplate
+    9787: [10003, 10015, 10007],           # The Shatterer, Truesilver Champion, Phantom Blade
+    20219: [12899, 12895, 12897, 12902, 12903, 12905, 12906, 12907, 12759],
+    20222: [12718, 12717, 12716, 12715, 12760, 8895, 12755, 12754, 12908, 12758],
+    10656: [10619, 10650],                 # Dragonscale Gauntlets, Dragonscale Breastplate
+    10658: [10630, 10632],                 # Gauntlets of the Sea, Helm of Fire
+    10660: [10621, 10647],                 # Wolfshead Helm, Feathered Breastplate
+}
+spec_recipes = {}
+for sp, sids in SPEC_TRAINER_RECIPES.items():
+    for sid in sids:
+        assert any(sid in rec for rec in DATA.values()), sid
+        spec_recipes[sid] = sp
+if ITEMSPARSE:
+    import csv
+    spec_of = {s[0] for s in SPECS}
+    for row in csv.DictReader(open(ITEMSPARSE, encoding="utf-8")):
+        sp = int(row["RequiredAbility"] or 0)
+        if sp not in spec_of: continue
+        iid = int(row["ID"])
+        for sid, rows in recipes.items():
+            if any(e["item"] == iid for e in rows): spec_recipes[sid] = sp
+spec_rows = []
+for sp, name, line, skill, level, parent, tr, st in SPECS:
+    spec_rows.append((sp, name, line, skill, level, parent, [t for t in tr if ref(t)], [t for t in st if ref(t)]))
+
 # ---------------------------------------------------------------- write
 def q(s): return '"' + str(s).replace("\\", "\\\\").replace('"', '\\"') + '"'
 def ids(xs): return "{" + ",".join(str(x) for x in xs) + "}"
@@ -253,6 +299,13 @@ with open(OUT, "w", encoding="utf-8", newline="\n") as f:
     f.write("}\n")
     # Materials a regular vendor sells (thread, vials, flux, dyes, spices...),
     # for the gather & craft mode: the planner may buy these, nothing else
+    f.write("\n-- Specializations: [spell] = { name, profession line, skill, level, needs first, trainers, who starts it }\nSP.SPECS = {\n")
+    for sp, name, line, skill, level, parent, tr, st in spec_rows:
+        f.write("\t[%d] = { %s, %d, %d, %d, %s, %s, %s },\n" % (sp, q(name), line, skill, level, parent or "nil", ids(tr), ids(st)))
+    f.write("}\n-- Recipes only a specialist can learn: [recipe spell] = specialization spell\nSP.SPEC_RECIPES = {")
+    for i, sid in enumerate(sorted(spec_recipes)):
+        f.write(("\n\t" if i % 8 == 0 else " ") + "[%d]=%d," % (sid, spec_recipes[sid]))
+    f.write("\n}\n")
     f.write("\n-- Materials sold by a regular vendor (not reputation or holiday vendors)\nSP.VENDOR_SOLD = {")
     sold = []
     for iid, r in item.items():
