@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2.0
+
+Net cost: what you get back for what you craft.
+
+- The plan now takes off what you get back for the things you craft, and picks recipes by that net cost. A recipe whose result sells well can now beat one with cheaper materials
+- New option "Count what I get back": selling to a vendor (default), vendor or Auction House (whichever pays more, Auctionator prices after the 5% cut), or off
+- The window shows the cost and what it comes to after selling, and a note on what to sell
+- Things the plan uses later, like bars for your next recipe, aren't counted as sold
+
 ## 1.1.0
 
 Alliance support.

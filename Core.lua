@@ -12,6 +12,7 @@ SP.version = (type(tocVersion) == "string" and not tocVersion:find("@")) and toc
 SP.defaults = {
 	target = 0,          -- 0 = the current skill cap (next trainer rank)
 	bagsFree = true,     -- materials you already have count as free
+	resale = "vendor",   -- count what you get back for what you craft: "off", "vendor" or "best" (vendor or Auction House)
 	point = nil,         -- saved window position when detached
 	shown = true,
 	scale = 1,           -- planner window size
@@ -75,6 +76,32 @@ function SP.Price(itemID)
 		end
 	end
 	return best, source
+end
+
+-- What a merchant pays you for an item (copper), from the game's item data
+function SP.SellPrice(itemID)
+	if not itemID then return end
+	local get = (C_Item and C_Item.GetItemInfo) or GetItemInfo
+	if get then
+		local ok, sell = pcall(function() return select(11, get(itemID)) end)
+		sell = Plain(sell)
+		if ok and type(sell) == "number" then return sell end
+	end
+	if C_Item and C_Item.RequestLoadItemDataByID then pcall(C_Item.RequestLoadItemDataByID, itemID) end
+end
+
+-- What you get back for one crafted item. mode "vendor": a merchant's price;
+-- "best": that or the Auction House price after the 5% cut, whichever is more.
+local AH_CUT = 0.95
+function SP.ResaleValue(itemID, mode)
+	mode = mode or (SP.db and SP.db.resale) or "off"
+	if mode == "off" or not itemID then return 0 end
+	local value, source = SP.SellPrice(itemID) or 0, "vendor"
+	if mode == "best" and SP.HasAuctionator() then
+		local ok, ah = pcall(Auctionator.API.v1.GetAuctionPriceByItemID, CALLER, itemID)
+		if ok and type(ah) == "number" and ah * AH_CUT > value then value, source = ah * AH_CUT, "ah" end
+	end
+	return value, value > 0 and source or nil
 end
 
 function SP.Money(copper)

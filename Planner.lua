@@ -12,7 +12,7 @@
 
 local ADDON, SP = ...
 local DIFF = SP.DIFF
-local max, min, ceil, abs = math.max, math.min, math.ceil, math.abs
+local max, min, ceil, abs, floor = math.max, math.min, math.ceil, math.abs, math.floor
 
 local TRAINER_CHANCE = 0.4 -- below this, new trainer recipes are almost always better
 local MIN_POINTS = 5       -- always plan at least this many points
@@ -135,6 +135,23 @@ function SP.MakePlan(prof, recipes, db, others, candidates)
 		return cost
 	end
 
+	-- What you get back for what you craft (sold to a vendor or on the
+	-- Auction House, per your setting), per craft
+	local resaleMode = db.resale or "off"
+	local resaleOf = {}
+	local function Resale(id)
+		if resaleOf[id] == nil then
+			local v, src = SP.ResaleValue(id, resaleMode)
+			resaleOf[id] = { v = v or 0, src = src }
+		end
+		return resaleOf[id].v, resaleOf[id].src
+	end
+	local function Back(r)
+		if resaleMode == "off" or not r.output then return 0 end
+		return (r.outputCount or 1) * Resale(r.output)
+	end
+	local produced = {}
+
 	-- What you own (if "use my materials" is on), plus what the plan makes.
 	local stock, buy, make, need = {}, {}, {}, {}
 	local function Have(id)
@@ -174,7 +191,9 @@ function SP.MakePlan(prof, recipes, db, others, candidates)
 	-- in the route: take whatever works, no "go to the trainer" stop.
 	-- Recipes a trainer teaches, learned once the plan reaches their skill
 	local function Score(r, p)
-		local score = CraftCost(r) / (p * r.ups)
+		-- net cost: materials minus what selling the result gets back (at least 1 copper,
+		-- so recipes that make money tie and the best skill-up chance wins)
+		local score = max(1, CraftCost(r) - Back(r)) / (p * r.ups)
 		if r.unlearned and not taught[r] then score = score + (r.trainCost or 0) / TRAIN_SPREAD end
 		return score
 	end
@@ -235,6 +254,7 @@ function SP.MakePlan(prof, recipes, db, others, candidates)
 			end
 			if best.output then
 				stock[best.output] = Have(best.output) + (best.outputCount or 1) * crafts
+				produced[best.output] = (produced[best.output] or 0) + (best.outputCount or 1) * crafts
 			end
 
 			local gain = min(best.ups, upTo - level)
@@ -272,6 +292,20 @@ function SP.MakePlan(prof, recipes, db, others, candidates)
 		plan.total = plan.total + step.cost
 	end
 	plan.total = plan.total + (plan.trainCost or 0)
+	-- What's left of what you crafted (not used later in the plan) and what it sells for
+	plan.resale, plan.sell, plan.resaleMode = 0, {}, resaleMode
+	if resaleMode ~= "off" then
+		for id, made in pairs(produced) do
+			local left = floor(min(made, max(0, stock[id] or 0)) + 0.05)
+			local v, src = Resale(id)
+			if left > 0 and v > 0 then
+				plan.sell[#plan.sell + 1] = { itemID = id, count = left, each = v, source = src, value = v * left }
+				plan.resale = plan.resale + v * left
+			end
+		end
+		table.sort(plan.sell, function(a, b) return a.value > b.value end)
+	end
+	plan.net = plan.total - plan.resale
 	for r, crafts in pairs(make) do
 		local n = ceil(crafts - 0.05)
 		if n > 0 then plan.prep[#plan.prep + 1] = { recipe = r, crafts = n, learn = r.unlearned or nil, learnAt = r.learn, trainCost = r.trainCost,

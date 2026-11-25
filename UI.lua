@@ -514,7 +514,12 @@ function UI:Show(prof, plan, loading)
 		self.items[MAX_ITEMS].tip = nil
 	end
 
-	f.total:SetText("Estimated cost to " .. (plan.reached or plan.to or "?") .. ": " .. SP.Money(plan.total))
+	if (plan.resale or 0) > 0 then
+		f.total:SetText("Cost to " .. (plan.reached or plan.to or "?") .. ": " .. SP.Money(plan.total)
+			.. "  |cff999999(" .. SP.Money(plan.net) .. " after selling what you craft)|r")
+	else
+		f.total:SetText("Estimated cost to " .. (plan.reached or plan.to or "?") .. ": " .. SP.Money(plan.total))
+	end
 	self.next = SP.NextCraft(plan)
 	self:UpdateCraftButton()
 
@@ -559,6 +564,13 @@ function UI:Show(prof, plan, loading)
 		notes[#notes + 1] = "Install Auctionator for prices."
 	elseif plan.unknownPrices then
 		notes[#notes + 1] = "Some prices are missing: do an Auctionator scan at the auction house."
+	end
+	if (plan.resale or 0) > 0 then
+		local top = plan.sell[1]
+		local name = top and ((C_Item and C_Item.GetItemNameByID and C_Item.GetItemNameByID(top.itemID)) or "your crafts")
+		notes[#notes + 1] = "Selling what you craft gets back about " .. SP.Money(plan.resale)
+			.. (plan.resaleMode == "best" and " (vendor or Auction House, whichever pays more)" or " at a vendor")
+			.. (top and (", most from " .. top.count .. "x " .. name) or "") .. "."
 	end
 	f.note:SetText(table.concat(notes, " "))
 end
@@ -943,6 +955,8 @@ local panel = Panel.Build("Profession Pathfinder",
 		{ "header", "Planning" },
 		{ "check", "bagsFree", "Count materials I already own",
 			"Materials in your bags and bank are taken off the shopping list." },
+		{ "choice", "resale", "Count what I get back", { { "off", "Off" }, { "vendor", "Selling to a vendor" }, { "best", "Vendor or AH, best" } },
+			"Takes off what you get back for the things you craft, and picks recipes by that net cost. Vendor: what a merchant pays. Vendor or AH: whichever pays more, with Auction House prices from Auctionator after the 5% cut. Things the plan uses later (like bars for your next recipe) aren't counted as sold." },
 		{ "number", "target", "Plan up to", 0, 300, 5, function(v) return v == 0 and "Skill cap" or string.format("skill %d", v) end,
 			"Skill cap: up to the most your current rank allows. Or pick a skill level to stop at.",
 			function(cur, d)
