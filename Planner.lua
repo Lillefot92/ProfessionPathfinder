@@ -223,7 +223,7 @@ function SP.MakePlan(prof, recipes, db, others, candidates)
 	local function Score(r, p)
 		-- net cost: materials minus what selling the result gets back (at least 1 copper,
 		-- so recipes that make money tie and the best skill-up chance wins)
-		local score = max(1, CraftCost(r) - Back(r)) / (p * r.ups)
+		local score = (db.netPick and max(1, CraftCost(r) - Back(r)) or CraftCost(r)) / (p * r.ups)
 		if r.unlearned and not taught[r] then score = score + (r.trainCost or 0) / TRAIN_SPREAD end
 		return score
 	end

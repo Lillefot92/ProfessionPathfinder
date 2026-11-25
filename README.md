@@ -17,7 +17,7 @@ Download it on [CurseForge](https://www.curseforge.com/wow/addons/profession-pat
 - When you hit your cap it shows who teaches the next rank, including the Expert books and Artisan quests for First Aid, Cooking and Fishing.
 - Shopping list with Auctionator prices, which you can send to Auctionator as a shopping list. Materials you already have are left out, and things like smelting your own bars are planned when that's cheaper.
 - Gather & craft mode: level a profession with only what you gather yourself (plus cloth and vendor items), no Auction House. It tells you what to gather, where, and which gathering skill to raise first. `/ppf gather` turns it on.
-- Counts what you get back for what you craft, selling to a vendor or on the Auction House, and picks recipes by that net cost. Pick vendor, vendor or AH, or off in the options.
+- Shows what you'd get back for what you craft (vendor or Auction House), and can pick recipes by the cost after selling if you turn that on in the options.
 - A craft button that crafts the next step for you.
 - Reads every trainer window you open, and learns from your own crafts, so the estimates get better as you play.
 - Counts the Working Overtime Legacy perk and shows when you're close to a Legacy point.

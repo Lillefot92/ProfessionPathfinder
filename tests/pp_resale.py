@@ -36,7 +36,11 @@ local p = SP.MakePlan(prof, { A, B }, db, {}, {})
 print("off:", p.steps[1].recipe.name, p.total, p.resale, p.net)
 assert(p.steps[1].recipe == A and p.resale == 0 and p.net == p.total)
 
+-- by default recipes are picked by what you pay now; the money back is only shown
 db.resale = "vendor"
+p = SP.MakePlan(prof, { A, B }, db, {}, {})
+assert(p.steps[1].recipe == A and p.resale == 0, "A's result sells for nothing")
+db.netPick = true
 p = SP.MakePlan(prof, { A, B }, db, {}, {})
 print("vendor:", p.steps[1].recipe.name, p.total, p.resale, p.net)
 assert(p.steps[1].recipe == B, "picks the recipe that's cheaper after selling")

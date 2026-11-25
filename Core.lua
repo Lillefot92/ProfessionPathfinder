@@ -13,6 +13,7 @@ SP.defaults = {
 	target = 0,          -- 0 = the current skill cap (next trainer rank)
 	bagsFree = true,     -- materials you already have count as free
 	resale = "vendor",   -- count what you get back for what you craft: "off", "vendor" or "best" (vendor or Auction House)
+	netPick = false,     -- pick recipes by cost after selling (off: by what you pay now)
 	selfGather = false,  -- gather & craft: only what you gather yourself and vendor items
 	point = nil,         -- saved window position when detached
 	shown = true,
