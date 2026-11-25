@@ -251,6 +251,17 @@ with open(OUT, "w", encoding="utf-8", newline="\n") as f:
     for qid in sorted(qn):
         f.write("\t[%d]=%s,\n" % (qid, q(quest[qid][1])))
     f.write("}\n")
+    # Materials a regular vendor sells (thread, vials, flux, dyes, spices...),
+    # for the gather & craft mode: the planner may buy these, nothing else
+    f.write("\n-- Materials sold by a regular vendor (not reputation or holiday vendors)\nSP.VENDOR_SOLD = {")
+    sold = []
+    for iid, r in item.items():
+        if r.get(12) not in (0, 5, 7): continue
+        if any(n in npc and flag(n) is None for n in tolist(r.get(14))): sold.append(iid)
+    for i, iid in enumerate(sorted(sold)):
+        f.write(("\n\t" if i % 12 == 0 else " ") + "[%d]=true," % iid)
+    f.write("\n}\n")
+print("vendor-sold materials:", len(sold))
 print("trainers:", {k: len(v) for k, v in trainers.items()})
 print("recipes linked:", len(recipes), "unmatched items:", len(unmatched))
 print("probably trainer:", {k: len(v) for k, v in maybe.items()})

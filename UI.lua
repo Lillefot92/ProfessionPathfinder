@@ -70,6 +70,16 @@ local function LearnTip(e, where)
 	return "Not learned yet: a trainer teaches it from skill " .. at .. (cost and (" for " .. cost) or "") .. ". Nearest: " .. where .. "."
 end
 
+-- First zone of a "A, B or C" list, to fit the price column
+local function ShortZone(z)
+	z = z or ""
+	local first = z:match("^([^,]+)") or z
+	first = first:match("^(.-) or ") or first
+	first = first:gsub("%s*%b()", "")
+	if #first > 18 then first = first:sub(1, 17) .. "." end
+	return first
+end
+
 local function LearnTag(source)
 	if source == "vendor" or source == "ah" then return "(buy recipe)" end
 	if source == "bags" then return "(recipe in bags)" end
@@ -317,6 +327,7 @@ function UI:Show(prof, plan, loading)
 	self:UpdateCraftButton()
 
 	f.planHeader:SetText("Plan (click a step to open the recipe)")
+	f.shopHeader:SetText(SP.db.selfGather and "Gather and buy (gather & craft mode)" or "Shopping list")
 	f.shopHeader:Show()
 	f.viewButton:SetShown(not prof)
 	f.ahButton:SetShown(prof ~= nil)
@@ -389,8 +400,17 @@ function UI:Show(prof, plan, loading)
 			r.name or "?",
 			step.noRecipe and ("Skill " .. Range(step.from, step.to) .. ".")
 				or string.format("Skill %s, about %d crafts.", Range(step.from, step.to), step.crafts),
-			(not step.noRecipe) and ("Materials to buy for this step: " .. SP.Money(step.cost)) or nil,
+			(not step.noRecipe and not plan.selfGather) and ("Materials to buy for this step: " .. SP.Money(step.cost)) or nil,
 		}
+		if plan.selfGather and step.get then
+			local parts = {}
+			for id, n in pairs(step.get) do
+				local c = math.ceil(n - 0.05)
+				if c > 0 then parts[#parts + 1] = c .. "x " .. (SP.ItemName(id) or "?") end
+			end
+			table.sort(parts)
+			if #parts > 0 then tip[#tip + 1] = "|cff40bf40Gather or buy for this step: " .. table.concat(parts, ", ") .. "|r" end
+		end
 		if step.note then tip[#tip + 1] = step.note end
 		-- what the planner has learned about this recipe
 		local e = r.id and SP.LearnEntry and SP.LearnEntry(r.id)
@@ -479,7 +499,7 @@ function UI:Show(prof, plan, loading)
 			for _, g in ipairs(gs) do if g.ok then who = g break end end
 			local verb = SP.GatherVerb(src.prof)
 			local zone = SP.GatherWhere(src)
-			local from = src.beasts and (src.beasts .. " beasts") or (src.node and (src.node .. (src.prof == "Mining" and " veins" or ""))) or "nodes"
+			local from = src.from or src.beasts and (src.beasts .. " beasts") or (src.node and (src.node .. (src.prof == "Mining" and " veins" or ""))) or "nodes"
 			if who then
 				gatherSave, gatherCount = gatherSave + (item.cost or 0), gatherCount + 1
 				gtag = " |cff40bf40(" .. (who.me and (src.how == "smelt" and "smelt" or verb) or who.who) .. ")|r"
@@ -498,12 +518,19 @@ function UI:Show(prof, plan, loading)
 			row.icon:SetTexture(item.itemID and SP.ItemIcon(item.itemID) or "Interface\\Icons\\INV_Misc_QuestionMark")
 			local where = item.source == "vendor" and " |cff999999(vendor)|r" or ""
 			row.text:SetText(item.count .. "x " .. itemName .. where .. gtag)
-			row.right:SetText(SP.Money(item.cost))
-			row.tip = {
-				itemName,
-				"Need to buy: " .. item.count .. (item.itemID and ("  (you have " .. SP.Owned(item.itemID) .. ")") or ""),
-				"Price each: " .. SP.Money(item.price) .. (item.source == "vendor" and " at a vendor" or (item.price and " on the auction house" or "")),
-			}
+			if item.gather then
+				local zone = src and SP.GatherWhere(src)
+				row.right:SetText("|cff40bf40" .. (zone and ShortZone(zone) or "gather") .. "|r")
+				row.pin = nil
+				row.tip = { itemName, "Gather: " .. item.count .. (item.itemID and ("  (you have " .. SP.Owned(item.itemID) .. ")") or "") }
+			else
+				row.right:SetText(SP.Money(item.cost))
+				row.tip = {
+					itemName,
+					"Need to buy: " .. item.count .. (item.itemID and ("  (you have " .. SP.Owned(item.itemID) .. ")") or ""),
+					"Price each: " .. SP.Money(item.price) .. (item.source == "vendor" and " at a vendor" or (item.price and " on the auction house" or "")),
+				}
+			end
 			if gtip then row.tip[#row.tip + 1] = (gtag ~= "" and "|cff40bf40" or "|cff999999") .. gtip .. "|r" end
 			row:Show()
 		end
@@ -514,7 +541,10 @@ function UI:Show(prof, plan, loading)
 		self.items[MAX_ITEMS].tip = nil
 	end
 
-	if (plan.resale or 0) > 0 then
+	if plan.selfGather then
+		f.total:SetText("Gold to " .. (plan.reached or plan.to or "?") .. ": " .. SP.Money(plan.total)
+			.. "  |cff40bf40+ " .. (plan.gatherCount or 0) .. " things to gather|r")
+	elseif (plan.resale or 0) > 0 then
 		f.total:SetText("Cost to " .. (plan.reached or plan.to or "?") .. ": " .. SP.Money(plan.total)
 			.. "  |cff999999(" .. SP.Money(plan.net) .. " after selling what you craft)|r")
 	else
@@ -525,6 +555,13 @@ function UI:Show(prof, plan, loading)
 
 	-- Notes
 	local notes = {}
+	if plan.selfGather then
+		for _, w in ipairs(plan.gatherWarn or {}) do
+			local verb = SP.GatherVerb(w.prof)
+			notes[#notes + 1] = "|cffffd100Raise " .. w.prof .. " to " .. w.skill .. "|r to " .. verb .. " " .. (w.node or "it")
+				.. (w.who and (" (or let " .. w.who .. " do it)") or (" (you have " .. (w.have or 0) .. ")")) .. "."
+		end
+	end
 	local nextLearn = plan.toLearn and plan.toLearn[1]
 	if nextLearn then
 		local where = SP.LearnWhere(prof, nextLearn)
@@ -535,6 +572,8 @@ function UI:Show(prof, plan, loading)
 	end
 	if plan.trainerAt then
 		notes[#notes + 1] = "From " .. plan.trainerAt .. " your known recipes rarely give skill. Check your trainer for new recipes (and reopen this window), or look for recipe drops at the Auction House."
+	elseif plan.selfStuck then
+		notes[#notes + 1] = "From " .. plan.stuckAt .. " no recipe can be made from what you gather and what vendors sell. Gather & craft mode works for professions that use ore, herbs, leather or cloth (turn it off in /ppf options or with /ppf gather)."
 	elseif plan.stuckAt then
 		notes[#notes + 1] = "From " .. plan.stuckAt .. " no recipe you know, or that a trainer is known to teach, gives skill. Visit your trainer (and reopen this window), or look for recipes from vendors and drops."
 	elseif #plan.steps > 0 then
@@ -545,7 +584,7 @@ function UI:Show(prof, plan, loading)
 		notes[#notes + 1] = "You can learn |cffffffff" .. rs.rank .. "|r" .. (rs.levelOK and " now" or (" at character level " .. rs.level)) .. " (cap " .. rs.cap .. ")"
 			.. " from " .. SP.RankHow(prof.name, rs.rank) .. "."
 	end
-	if gatherCount > 0 then
+	if gatherCount > 0 and not plan.selfGather then
 		notes[#notes + 1] = "|cff40bf40Green items|r you can gather yourself" .. (gatherSave > 0 and (": saves about " .. SP.Money(gatherSave)) or "") .. "."
 	end
 	if prof.id == 186 or prof.enum == 6 or prof.name == "Mining" then
@@ -560,7 +599,9 @@ function UI:Show(prof, plan, loading)
 			notes[#notes + 1] = "Open your " .. name .. " window once so smelting can be used for bars."
 		end
 	end
-	if not SP.HasAuctionator() then
+	if plan.selfGather then
+		notes[#notes + 1] = "Gather & craft mode: only what you gather and vendor items, no Auction House."
+	elseif not SP.HasAuctionator() then
 		notes[#notes + 1] = "Install Auctionator for prices."
 	elseif plan.unknownPrices then
 		notes[#notes + 1] = "Some prices are missing: do an Auctionator scan at the auction house."
@@ -670,6 +711,10 @@ SlashCmdList.PROFESSIONPATHFINDER = function(msg)
 		SP.db.target = n or 0
 		print(PREFIX .. (n and ("planning up to skill " .. n) or "planning up to your skill cap"))
 		SP.RequestRefresh()
+	elseif cmd == "gather" then
+		SP.db.selfGather = not SP.db.selfGather
+		print(PREFIX .. (SP.db.selfGather and "gather & craft mode on: only what you gather yourself and vendor items" or "gather & craft mode off: Auction House materials are used again"))
+		SP.RequestRefresh()
 	elseif cmd == "bags" then
 		SP.db.bagsFree = not SP.db.bagsFree
 		print(PREFIX .. (SP.db.bagsFree and "materials you own are taken off the shopping list" or "shopping list ignores what you own"))
@@ -692,7 +737,7 @@ SlashCmdList.PROFESSIONPATHFINDER = function(msg)
 	elseif cmd == "options" or cmd == "config" or cmd == "settings" then
 		SP.OpenOptions()
 	elseif cmd == "help" then
-		print(PREFIX .. "/ppf - show or hide the planner (with no profession window open it shows where to gather); /ppf options - options page; /ppf target <skill> - plan up to a skill (0 = cap); /ppf bags - take what you own off the shopping list (on/off); /ppf chars - all your characters' professions; /ppf fish - one-key fishing on/off; /ppf fish log - fishing by zone; /ppf fish reset - new fishing session; /ppf scan - recipe data check (for bug reports); /ppf trainer - trainer data check")
+		print(PREFIX .. "/ppf - show or hide the planner (with no profession window open it shows where to gather); /ppf options - options page; /ppf target <skill> - plan up to a skill (0 = cap); /ppf bags - take what you own off the shopping list (on/off); /ppf gather - gather & craft mode, only what you gather yourself (on/off); /ppf chars - all your characters' professions; /ppf fish - one-key fishing on/off; /ppf fish log - fishing by zone; /ppf fish reset - new fishing session; /ppf scan - recipe data check (for bug reports); /ppf trainer - trainer data check")
 	else
 		UI:Toggle()
 	end
@@ -953,6 +998,8 @@ local panel = Panel.Build("Profession Pathfinder",
 			"Off: the planner stays hidden until you type /ppf." },
 		{ "number", "scale", "Size", 0.6, 1.5, 0.05, function(v) return string.format("%d%%", v * 100 + 0.5) end },
 		{ "header", "Planning" },
+		{ "check", "selfGather", "Gather & craft: only use what I gather myself",
+			"Plans with only materials you (or one of your characters) can gather, cloth from humanoids and vendor items. No Auction House. Shows where to gather everything and which gathering skill to raise first. Also /ppf gather." },
 		{ "check", "bagsFree", "Count materials I already own",
 			"Materials in your bags and bank are taken off the shopping list." },
 		{ "choice", "resale", "Count what I get back", { { "off", "Off" }, { "vendor", "Selling to a vendor" }, { "best", "Vendor or AH, best" } },

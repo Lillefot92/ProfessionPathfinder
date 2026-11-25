@@ -13,6 +13,7 @@ SP.defaults = {
 	target = 0,          -- 0 = the current skill cap (next trainer rank)
 	bagsFree = true,     -- materials you already have count as free
 	resale = "vendor",   -- count what you get back for what you craft: "off", "vendor" or "best" (vendor or Auction House)
+	selfGather = false,  -- gather & craft: only what you gather yourself and vendor items
 	point = nil,         -- saved window position when detached
 	shown = true,
 	scale = 1,           -- planner window size
@@ -513,6 +514,8 @@ function SP.Gatherers(itemID)
 	local src = SP.GATHER and SP.GATHER[itemID]
 	if not src or not SP.db then return nil, nil end
 	local out, me = {}, MyKey()
+	-- cloth needs no profession: anyone can collect it
+	if src.prof == "Cloth" then return { { who = "you", prof = "Cloth", skill = 0, ok = true, me = true } }, src end
 	for key, c in pairs(SP.db.chars or {}) do
 		local p = c.profs and c.profs[src.prof]
 		if p then
@@ -524,7 +527,7 @@ function SP.Gatherers(itemID)
 end
 
 function SP.GatherVerb(prof)
-	return ({ Mining = "mine", Herbalism = "pick", Skinning = "skin" })[prof] or "gather"
+	return ({ Mining = "mine", Herbalism = "pick", Skinning = "skin", Cloth = "collect" })[prof] or "gather"
 end
 
 ---------------------------------------------------------------------------

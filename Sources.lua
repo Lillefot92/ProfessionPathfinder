@@ -1628,3 +1628,32 @@ SP.QUEST_NAMES = {
 	[8877]="Firework Launcher",
 	[8878]="Festive Recipes",
 }
+
+-- Materials sold by a regular vendor (not reputation or holiday vendors)
+SP.VENDOR_SOLD = {
+	[117]=true, [159]=true, [414]=true, [422]=true, [765]=true, [785]=true, [787]=true, [858]=true, [929]=true, [954]=true, [955]=true, [1179]=true,
+	[1180]=true, [1181]=true, [1205]=true, [1477]=true, [1478]=true, [1645]=true, [1707]=true, [1708]=true, [1710]=true, [1711]=true, [1712]=true, [2070]=true,
+	[2287]=true, [2289]=true, [2290]=true, [2319]=true, [2320]=true, [2321]=true, [2324]=true, [2325]=true, [2447]=true, [2449]=true, [2453]=true, [2455]=true,
+	[2593]=true, [2594]=true, [2595]=true, [2596]=true, [2604]=true, [2605]=true, [2665]=true, [2678]=true, [2686]=true, [2692]=true, [2723]=true, [2880]=true,
+	[2892]=true, [2893]=true, [2894]=true, [2928]=true, [2930]=true, [3012]=true, [3013]=true, [3355]=true, [3356]=true, [3357]=true, [3358]=true, [3371]=true,
+	[3372]=true, [3385]=true, [3466]=true, [3703]=true, [3713]=true, [3770]=true, [3771]=true, [3775]=true, [3777]=true, [3827]=true, [3857]=true, [3927]=true,
+	[3928]=true, [4234]=true, [4289]=true, [4291]=true, [4304]=true, [4340]=true, [4341]=true, [4342]=true, [4357]=true, [4361]=true, [4363]=true, [4364]=true,
+	[4371]=true, [4378]=true, [4382]=true, [4384]=true, [4389]=true, [4399]=true, [4400]=true, [4404]=true, [4419]=true, [4421]=true, [4422]=true, [4424]=true,
+	[4425]=true, [4426]=true, [4470]=true, [4471]=true, [4536]=true, [4537]=true, [4538]=true, [4539]=true, [4540]=true, [4541]=true, [4542]=true, [4544]=true,
+	[4592]=true, [4593]=true, [4594]=true, [4595]=true, [4599]=true, [4600]=true, [4601]=true, [4602]=true, [4604]=true, [4605]=true, [4606]=true, [4607]=true,
+	[4608]=true, [5042]=true, [5048]=true, [5060]=true, [5140]=true, [5173]=true, [5237]=true, [5565]=true, [5740]=true, [6149]=true, [6217]=true, [6260]=true,
+	[6261]=true, [6529]=true, [6530]=true, [6532]=true, [6533]=true, [6887]=true, [6947]=true, [6949]=true, [6950]=true, [7228]=true, [8170]=true, [8343]=true,
+	[8529]=true, [8766]=true, [8845]=true, [8846]=true, [8923]=true, [8924]=true, [8925]=true, [8926]=true, [8927]=true, [8928]=true, [8932]=true, [8948]=true,
+	[8950]=true, [8952]=true, [8953]=true, [8957]=true, [8984]=true, [8985]=true, [9260]=true, [9312]=true, [9313]=true, [9314]=true, [9315]=true, [9317]=true,
+	[9318]=true, [10290]=true, [10305]=true, [10306]=true, [10307]=true, [10308]=true, [10309]=true, [10310]=true, [10647]=true, [10648]=true, [10684]=true, [10918]=true,
+	[10920]=true, [10921]=true, [10922]=true, [10938]=true, [10940]=true, [11109]=true, [11291]=true, [11325]=true, [11444]=true, [12810]=true, [13443]=true, [13463]=true,
+	[13464]=true, [14256]=true, [14341]=true, [16166]=true, [16167]=true, [16168]=true, [16169]=true, [16170]=true, [16171]=true, [16583]=true, [17020]=true, [17021]=true,
+	[17026]=true, [17028]=true, [17029]=true, [17030]=true, [17031]=true, [17032]=true, [17033]=true, [17034]=true, [17035]=true, [17036]=true, [17037]=true, [17038]=true,
+	[17119]=true, [17348]=true, [17349]=true, [17351]=true, [17352]=true, [18256]=true, [18269]=true, [18284]=true, [18287]=true, [18288]=true, [18567]=true, [18606]=true,
+	[18607]=true, [18632]=true, [18633]=true, [18635]=true, [18662]=true, [18839]=true, [18841]=true, [19045]=true, [19046]=true, [19060]=true, [19061]=true, [19062]=true,
+	[19066]=true, [19067]=true, [19068]=true, [19221]=true, [19222]=true, [19223]=true, [19224]=true, [19225]=true, [19299]=true, [19300]=true, [19301]=true, [19304]=true,
+	[19305]=true, [19306]=true, [19307]=true, [19318]=true, [20222]=true, [20223]=true, [20224]=true, [20225]=true, [20226]=true, [20227]=true, [20232]=true, [20234]=true,
+	[20235]=true, [20237]=true, [20243]=true, [20244]=true, [20557]=true, [20844]=true, [21030]=true, [21031]=true, [21033]=true, [21177]=true, [21552]=true, [21557]=true,
+	[21558]=true, [21559]=true, [21571]=true, [21574]=true, [21576]=true, [21721]=true, [21747]=true, [21815]=true, [21829]=true, [21833]=true, [22324]=true, [23160]=true,
+	[23161]=true,
+}

@@ -2,7 +2,11 @@
 
 ## 1.2.0
 
-Net cost: what you get back for what you craft.
+Gather & craft mode, and net cost.
+
+- New gather & craft mode (`/ppf gather` or the options): levels a profession with only what you gather yourself, cloth from humanoids and vendor items, no Auction House. Picks the recipes that need the least gathering, lists what to gather and where, shows what each step needs, and tells you when a gathering skill has to go up first (like Mining 65 for Tin)
+- Your other characters' gathering counts too: if your alt can mine it, it's in
+- Cloth (Linen to Runecloth) is listed with the humanoid levels that drop it and where to farm them
 
 - The plan now takes off what you get back for the things you craft, and picks recipes by that net cost. A recipe whose result sells well can now beat one with cheaper materials
 - New option "Count what I get back": selling to a vendor (default), vendor or Auction House (whichever pays more, Auctionator prices after the 5% cut), or off

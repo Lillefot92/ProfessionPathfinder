@@ -19,6 +19,8 @@ local MIN_POINTS = 5       -- always plan at least this many points
 local UNKNOWN_PRICE = 2500 -- copper per item when no price is known: assume it's not cheap
 local SWITCH = 1.15        -- only change recipe when another is 15% cheaper per point
 local TRAIN_SPREAD = 10    -- a training fee counts as spread over this many points
+local GATHER_EFFORT = 40   -- gather & craft: each item you gather weighs like this many copper
+local VENDOR_GUESS = 50    -- a vendor material with no known price
 
 -- Chance of a skill-up for recipe r at `level` (we're at `skill` now), from
 -- the colors alone.
@@ -93,11 +95,35 @@ function SP.MakePlan(prof, recipes, db, others, candidates)
 		if r.output and not maker[r.output] and r.learn <= target then maker[r.output] = r end
 	end
 
+	-- Gather & craft: only materials you (or one of your characters) can
+	-- gather, cloth from humanoids, and what a vendor sells. No Auction House.
+	-- Gathering counts as effort when choosing recipes, not as gold.
+	local selfMode = db.selfGather and true or false
+	plan.selfGather = selfMode
+	local function Source(id)
+		local src = SP.GATHER and SP.GATHER[id]
+		if src then
+			local gs = SP.Gatherers(id)
+			if gs and #gs > 0 then
+				if src.prof == "Cloth" then return "cloth" end
+				return src.how == "smelt" and "smelt" or "gather"
+			end
+		end
+		if SP.VENDOR_SOLD and SP.VENDOR_SOLD[id] then return "vendor" end
+	end
+
 	-- Market value of an item: the cheaper of buying it and making it.
 	local priceOf, unit = {}, {}
 	local function Price(id)
 		if priceOf[id] == nil then
 			local p, src = SP.Price(id)
+			if selfMode then
+				local how = Source(id)
+				if how == "gather" or how == "cloth" then p, src = GATHER_EFFORT, how
+				elseif how == "smelt" then p, src = GATHER_EFFORT * 1.5, how
+				elseif how == "vendor" then p, src = (src == "vendor" and p) or VENDOR_GUESS, "vendor"
+				else p, src = nil, nil end
+			end
 			priceOf[id] = { p = p, src = src }
 		end
 		return priceOf[id].p, priceOf[id].src
@@ -154,6 +180,7 @@ function SP.MakePlan(prof, recipes, db, others, candidates)
 
 	-- What you own (if "use my materials" is on), plus what the plan makes.
 	local stock, buy, make, need = {}, {}, {}, {}
+	local collect -- what the current step needs gathered or bought
 	local function Have(id)
 		if stock[id] == nil then stock[id] = db.bagsFree and SP.Owned(id) or 0 end
 		return stock[id]
@@ -181,7 +208,10 @@ function SP.MakePlan(prof, recipes, db, others, candidates)
 			return cost
 		end
 		buy[id] = (buy[id] or 0) + rest
-		return rest * (Price(id) or 0)
+		if collect then collect[id] = (collect[id] or 0) + rest end
+		local p, src = Price(id)
+		if selfMode and src ~= "vendor" then return 0 end
+		return rest * (p or 0)
 	end
 
 	local level = skill
@@ -196,6 +226,17 @@ function SP.MakePlan(prof, recipes, db, others, candidates)
 		local score = max(1, CraftCost(r) - Back(r)) / (p * r.ups)
 		if r.unlearned and not taught[r] then score = score + (r.trainCost or 0) / TRAIN_SPREAD end
 		return score
+	end
+	-- Gather & craft: can every material be gathered, made or bought from a vendor
+	-- (or is it already in your bags)? Recipes from the Auction House are out too.
+	local function Usable(r)
+		if not selfMode then return true end
+		if r.how == "ah" then return false end
+		for _, rg in ipairs(r.reagents or {}) do
+			if not rg.itemID then return false end
+			if not Unit(rg.itemID) and Have(rg.itemID) < rg.count then return false end
+		end
+		return true
 	end
 	-- Is a trainer recipe known that unlocks above this skill (still to come)?
 	local function Ahead(lvl)
@@ -214,7 +255,7 @@ function SP.MakePlan(prof, recipes, db, others, candidates)
 			for pass = 1, 2 do
 				for _, list in ipairs({ recipes, candidates }) do
 					for _, r in ipairs(list) do
-						if not r.unlearned or r.learn <= level then
+						if (not r.unlearned or r.learn <= level) and Usable(r) then
 							local p = SP.Chance(r, level, skill)
 							if p > 0 and (pass == 2 or p >= TRAINER_CHANCE) then
 								local score = Score(r, p)
@@ -228,7 +269,7 @@ function SP.MakePlan(prof, recipes, db, others, candidates)
 				if best then break end
 			end
 			if not best then
-				if not fill then plan.stuckAt = level end
+				if not fill then plan.stuckAt = level; plan.selfStuck = selfMode or nil end
 				return false
 			end
 			-- Stay with the recipe you're making unless another is clearly cheaper
@@ -249,9 +290,12 @@ function SP.MakePlan(prof, recipes, db, others, candidates)
 
 			local crafts = 1 / bestP
 			local stepCost = 0
+			collect = {}
 			for _, rg in ipairs(best.reagents) do
 				stepCost = stepCost + Acquire(rg.itemID, rg.count * crafts, 0)
 			end
+			local got = collect
+			collect = nil
 			if best.output then
 				stock[best.output] = Have(best.output) + (best.outputCount or 1) * crafts
 				produced[best.output] = (produced[best.output] or 0) + (best.outputCount or 1) * crafts
@@ -262,8 +306,9 @@ function SP.MakePlan(prof, recipes, db, others, candidates)
 				last.to = level + gain
 				last.crafts = last.crafts + crafts
 				last.cost = last.cost + stepCost
+				for id, n in pairs(got) do last.get[id] = (last.get[id] or 0) + n end
 			else
-				local step = { recipe = best, from = level, to = level + gain, crafts = crafts, cost = stepCost, fill = fill or nil }
+				local step = { recipe = best, from = level, to = level + gain, crafts = crafts, cost = stepCost, fill = fill or nil, get = got }
 				if best.unlearned and not taught[best] then
 					taught[best] = true
 					step.learn, step.learnAt, step.trainCost, step.source = true, best.learn, best.trainCost, best.how or "trainer"
@@ -313,18 +358,42 @@ function SP.MakePlan(prof, recipes, db, others, candidates)
 	end
 	table.sort(plan.prep, function(a, b) return a.crafts > b.crafts end)
 
+	plan.gatherWarn, plan.gatherCount = {}, 0
+	local warned = {}
 	for id, amount in pairs(buy) do
 		local n = ceil(amount - 0.05)
 		if n > 0 then
 			local p, src = Price(id)
-			plan.shopping[#plan.shopping + 1] = { itemID = id, count = n, price = p, source = src, cost = p and p * n or nil }
+			local gold = not selfMode or src == "vendor"
+			plan.shopping[#plan.shopping + 1] = { itemID = id, count = n, price = gold and p or nil, source = src,
+				cost = (gold and p) and p * n or nil, gather = (not gold) or nil }
+			if selfMode and not gold then
+				plan.gatherCount = plan.gatherCount + n
+				-- a gathering skill you still need to raise
+				local g = SP.GATHER[id]
+				local gs = SP.Gatherers(id)
+				local able = false
+				for _, who in ipairs(gs or {}) do if who.ok then able = true end end
+				local key = g and (g.prof .. ":" .. g.skill)
+				if g and not able and not warned[key] then
+					warned[key] = true
+					local mine = gs and gs[1]
+					plan.gatherWarn[#plan.gatherWarn + 1] = { prof = g.prof, skill = g.skill, node = g.node, itemID = id,
+						have = mine and mine.skill or 0, who = mine and not mine.me and mine.who or nil }
+				end
+			end
 		end
 	end
+	table.sort(plan.gatherWarn, function(a, b) if a.prof ~= b.prof then return a.prof < b.prof end return a.skill < b.skill end)
 	for name, amount in pairs(nameBuy) do
 		local n = ceil(amount - 0.05)
 		if n > 0 then plan.shopping[#plan.shopping + 1] = { name = name, count = n } end
 	end
-	table.sort(plan.shopping, function(a, b) return (a.cost or 0) > (b.cost or 0) end)
+	table.sort(plan.shopping, function(a, b)
+		if (a.gather and 1 or 0) ~= (b.gather and 1 or 0) then return a.gather and true or false end
+		if a.gather then return a.count > b.count end
+		return (a.cost or 0) > (b.cost or 0)
+	end)
 
 	-- Where each material is first used (for the fishing helper)
 	plan.usedBy = {}
@@ -357,7 +426,7 @@ function SP.ExportToAuctionator(plan)
 	local api = Auctionator.API.v1
 	local terms = {}
 	for _, item in ipairs(plan.shopping) do
-		if item.source ~= "vendor" then
+		if item.source ~= "vendor" and not item.gather then
 			local name = item.name or SP.ItemName(item.itemID)
 			local ok, s = pcall(api.ConvertToSearchString, "Profession Pathfinder", { searchString = name, isExact = true, quantity = item.count })
 			terms[#terms + 1] = ok and s or name

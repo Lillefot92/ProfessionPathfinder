@@ -64,6 +64,17 @@ SP.Gathering = {
 	},
 }
 
+-- Cloth: no profession needed, it drops from humanoids of these levels
+SP.Gathering.Cloth = {
+	route = {
+		Z(1, 2, "Linen Cloth (humanoids level 5-15)", "Westfall or Elwynn Forest (Defias)", "Durotar or The Barrens (quilboars and centaurs)"),
+		Z(2, 3, "Wool Cloth (humanoids level 15-25)", "Westfall or Redridge Mountains", "The Barrens or Hillsbrad Foothills"),
+		Z(3, 4, "Silk Cloth (humanoids level 25-35)", "Stranglethorn Vale (Venture Co.) or Hillsbrad Foothills (Syndicate)"),
+		Z(4, 5, "Mageweave Cloth (humanoids level 35-50)", "Stranglethorn Vale (trolls), Tanaris (Wastewander) or Desolace (centaurs)"),
+		Z(5, 6, "Runecloth (humanoids level 50-60)", "Eastern Plaguelands, Winterspring (Deadwood furbolgs) or Felwood"),
+	},
+}
+
 -- Next trainer rank: { needed skill, cap after training, how }
 -- Character level needed (Icy Veins' WoW Forever profession guide):
 -- crafting / gathering professions.
@@ -88,6 +99,7 @@ end
 local function M(node, skill, how) return { prof = "Mining", node = node, skill = skill, how = how } end
 local function H(node, skill) return { prof = "Herbalism", node = node, skill = skill } end
 local function K(skill, beasts) return { prof = "Skinning", skill = skill, beasts = beasts } end
+local function C(node, levels) return { prof = "Cloth", node = node, skill = 0, from = "level " .. levels .. " humanoids" } end
 SP.GATHER = {
 	-- Ores
 	[2770] = M("Copper", 1), [2771] = M("Tin", 65), [2775] = M("Silver", 75), [2772] = M("Iron", 125),
@@ -112,6 +124,9 @@ SP.GATHER = {
 	[4234] = K(150, "level 30-40"), [4235] = K(150, "level 30-40"),
 	[4304] = K(200, "level 40-50"), [8169] = K(200, "level 40-50"),
 	[8170] = K(250, "level 50-60"), [8171] = K(250, "level 50-60"),
+	-- Cloth (anyone)
+	[2589] = C("Linen", "5-15"), [2592] = C("Wool", "15-25"), [4306] = C("Silk", "25-35"),
+	[4338] = C("Mageweave", "35-50"), [14047] = C("Runecloth", "50-60"),
 }
 
 -- Where to gather it: the first route zone that lists the node (or, for
