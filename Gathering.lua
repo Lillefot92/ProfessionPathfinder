@@ -21,10 +21,10 @@ SP.Gathering = {
 			Z(1, 65, "Copper", "Elwynn Forest", "Durotar", "Smelting Copper also gives skill to about 65."),
 			Z(65, 75, "Tin", "Redridge Mountains or Wetlands", "Silverpine Forest or Hillsbrad Foothills", "Smelt Tin too."),
 			Z(75, 125, "Silver and Tin", "Redridge Mountains or Wetlands", "Silverpine Forest or Hillsbrad Foothills", "Smelting Bronze gives skill to about 105."),
-			Z(125, 155, "Iron", "Thousand Needles or Arathi Highlands", nil, "Smelting Iron (from 130) gives skill to about 140."),
-			Z(155, 175, "Gold and Iron", "Arathi Highlands, Thousand Needles or Desolace", nil, "Smelting Gold gives skill to about 185: a few Gold Bars get you to 175 for Mithril."),
-			Z(175, 245, "Mithril (Truesilver from 230)", "The Hinterlands or Tanaris"),
-			Z(245, 275, "Thorium", "Un'Goro Crater, Blasted Lands or Felwood"),
+			Z(125, 155, "Iron", "Thousand Needles, Arathi Highlands, Desolace or Stranglethorn Vale", nil, "Smelting Iron (from 130) gives skill to about 140."),
+			Z(155, 175, "Gold and Iron", "Arathi Highlands, Thousand Needles, Desolace or Badlands", nil, "Smelting Gold gives skill to about 185: a few Gold Bars get you to 175 for Mithril."),
+			Z(175, 245, "Mithril (Truesilver from 230)", "Badlands, Tanaris, The Hinterlands or Searing Gorge"),
+			Z(245, 275, "Thorium", "Un'Goro Crater, Blasted Lands, Felwood or Burning Steppes"),
 			Z(275, 300, "Rich Thorium", "Un'Goro Crater, Winterspring or Burning Steppes"),
 		},
 	},
@@ -37,10 +37,10 @@ SP.Gathering = {
 		route = {
 			Z(1, 70, "Peacebloom, Silverleaf, Earthroot", "Elwynn Forest, Dun Morogh or Teldrassil", "Durotar, Mulgore or Tirisfal Glades"),
 			Z(70, 115, "Mageroyal, Briarthorn, Stranglekelp", "Loch Modan or Darkshore", "Silverpine Forest"),
-			Z(115, 170, "Bruiseweed, Wild Steelbloom, Kingsblood", "Hillsbrad Foothills or Stonetalon Mountains"),
-			Z(170, 205, "Liferoot, Fadeleaf, Goldthorn, Khadgar's Whisker", "Stranglethorn Vale or Arathi Highlands"),
-			Z(205, 230, "Purple Lotus, Firebloom", "Tanaris or Searing Gorge", nil, "Train Artisan first: no trainer there."),
-			Z(230, 270, "Sungrass, Golden Sansam, Ghost Mushroom", "The Hinterlands"),
+			Z(115, 170, "Bruiseweed, Wild Steelbloom, Kingsblood", "Hillsbrad Foothills, Stonetalon Mountains or Wetlands"),
+			Z(170, 205, "Liferoot, Fadeleaf, Goldthorn, Khadgar's Whisker", "Stranglethorn Vale, Arathi Highlands, Swamp of Sorrows or Dustwallow Marsh"),
+			Z(205, 230, "Purple Lotus, Firebloom", "Badlands, Tanaris or Searing Gorge", nil, "Train Artisan first: no trainer there."),
+			Z(230, 270, "Sungrass, Golden Sansam, Ghost Mushroom", "The Hinterlands or Feralas"),
 			Z(270, 300, "Gromsblood, Dreamfoil, Mountain Silversage, Plaguebloom", "Felwood"),
 		},
 	},
@@ -63,6 +63,46 @@ SP.Gathering = {
 		},
 	},
 }
+
+-- Level range of each zone, so suggestions fit your character
+SP.ZONE_LEVELS = {
+	["Elwynn Forest"] = { 1, 10 }, ["Dun Morogh"] = { 1, 10 }, ["Teldrassil"] = { 1, 10 }, ["Northshire"] = { 1, 5 },
+	["Durotar"] = { 1, 10 }, ["Mulgore"] = { 1, 10 }, ["Tirisfal Glades"] = { 1, 10 },
+	["Westfall"] = { 10, 20 }, ["Loch Modan"] = { 10, 20 }, ["Darkshore"] = { 10, 20 }, ["Silverpine Forest"] = { 10, 20 },
+	["The Barrens"] = { 10, 25 }, ["Redridge Mountains"] = { 15, 25 }, ["Stonetalon Mountains"] = { 15, 27 },
+	["Ashenvale"] = { 18, 30 }, ["Duskwood"] = { 18, 30 }, ["Wetlands"] = { 20, 30 }, ["Hillsbrad Foothills"] = { 20, 30 },
+	["Thousand Needles"] = { 25, 35 }, ["Alterac Mountains"] = { 30, 40 }, ["Arathi Highlands"] = { 30, 40 },
+	["Desolace"] = { 30, 40 }, ["Stranglethorn Vale"] = { 30, 45 }, ["Dustwallow Marsh"] = { 35, 45 },
+	["Badlands"] = { 35, 45 }, ["Swamp of Sorrows"] = { 35, 45 }, ["Feralas"] = { 40, 50 }, ["The Hinterlands"] = { 40, 50 },
+	["Tanaris"] = { 40, 50 }, ["Searing Gorge"] = { 43, 50 }, ["Azshara"] = { 45, 55 }, ["Blasted Lands"] = { 45, 55 },
+	["Un'Goro Crater"] = { 48, 55 }, ["Felwood"] = { 48, 55 }, ["Burning Steppes"] = { 50, 58 },
+	["Western Plaguelands"] = { 51, 58 }, ["Eastern Plaguelands"] = { 53, 60 }, ["Winterspring"] = { 53, 60 }, ["Silithus"] = { 55, 60 },
+}
+
+-- Keep only the zones in a "A, B or C" list that fit a character of this level
+-- (a couple of levels above is fine). If none fit, the easiest one with its level.
+function SP.FitZones(text, level)
+	if not text or not level or level <= 0 then return text end
+	local parts = {}
+	for raw in (text:gsub(" or ", ", ")):gmatch("[^,]+") do
+		local piece = raw:match("^%s*(.-)%s*$")
+		if piece ~= "" then parts[#parts + 1] = piece end
+	end
+	if #parts < 2 then
+		local r = SP.ZONE_LEVELS[(parts[1] or ""):gsub("%s*%b()", "")]
+		if r and r[1] > level + 2 then return text .. " (level " .. r[1] .. "+)" end
+		return text
+	end
+	local fit, easiest, easiestMin = {}, nil, 999
+	for _, piece in ipairs(parts) do
+		local r = SP.ZONE_LEVELS[piece:gsub("%s*%b()", "")]
+		if not r or r[1] <= level + 2 then fit[#fit + 1] = piece end
+		if r and r[1] < easiestMin then easiest, easiestMin = piece, r[1] end
+	end
+	if #fit == 0 then return easiest .. " (level " .. easiestMin .. "+)" end
+	if #fit == 1 then return fit[1] end
+	return table.concat(fit, ", ", 1, #fit - 1) .. " or " .. fit[#fit]
+end
 
 -- Cloth: no profession needed, it drops from humanoids of these levels
 SP.Gathering.Cloth = {

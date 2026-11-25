@@ -81,6 +81,26 @@ print("cloth where:", SP.GatherWhere(SP.GATHER[2589]))
 SP.db.chars = { ["Tester-Forever"] = { name = "Tester", profs = {} }, ["Alt-Forever"] = { name = "Alt", profs = { Mining = { skill = 100 } } } }
 p = SP.MakePlan(prof, { STONE }, db, {}, {})
 assert(p.steps[1].recipe == STONE and #p.gatherWarn == 0)
+-- materials nobody can gather yet are left for later: Truesilver (Mining 230, you have 40)
+-- loses to three Rough Stones you can mine now, even though it's one bar vs three stones
+SP.db.chars = { ["Tester-Forever"] = { name = "Tester", profs = { Mining = { skill = 40 } } } }
+local TRUE = R(6, "Truesilver Thing", { { itemID = 6037, count = 1 } }, 9997)
+local STONES = R(7, "Stone Thing", { { itemID = 2835, count = 3 } }, 9996)
+p = SP.MakePlan(prof, { TRUE, STONES }, db, {}, {})
+print("reachable first:", p.steps[1].recipe.name)
+assert(p.steps[1].recipe == STONES)
+SP.db.chars["Tester-Forever"].profs.Mining.skill = 240
+p = SP.MakePlan(prof, { TRUE, STONES }, db, {}, {})
+assert(p.steps[1].recipe == TRUE, "once you can mine Truesilver, one bar beats three stones")
+
+-- zones that fit the character's level
+assert(SP.FitZones("Badlands, Tanaris, The Hinterlands or Searing Gorge", 38) == "Badlands, Tanaris or The Hinterlands")
+assert(SP.FitZones("Badlands, Tanaris, The Hinterlands or Searing Gorge", 30) == "Badlands (level 35+)")
+assert(SP.FitZones("Felwood", 40) == "Felwood (level 48+)")
+assert(SP.FitZones("Felwood", 50) == "Felwood")
+assert(SP.FitZones("Wetlands (raptors)", 20) == "Wetlands (raptors)")
+assert(SP.FitZones("Badlands or Tanaris", nil) == "Badlands or Tanaris")
+
 -- the window draws a gather & craft plan (rows, notes, tooltips) without errors
 SP.db.chars = { ["Tester-Forever"] = { name = "Tester", profs = { Mining = { skill = 40 } } } }
 SP.db.selfGather = true

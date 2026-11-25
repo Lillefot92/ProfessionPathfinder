@@ -522,7 +522,8 @@ function UI:Show(prof, plan, loading)
 				local zone = src and SP.GatherWhere(src)
 				row.right:SetText("|cff40bf40" .. (zone and ShortZone(zone) or "gather") .. "|r")
 				row.pin = nil
-				row.tip = { itemName, "Gather: " .. item.count .. (item.itemID and ("  (you have " .. SP.Owned(item.itemID) .. ")") or "") }
+				row.tip = { itemName, "Gather: " .. item.count .. (item.itemID and ("  (you have " .. SP.Owned(item.itemID) .. ")") or ""),
+					zone and ("Where: " .. zone) or nil }
 			else
 				row.right:SetText(SP.Money(item.cost))
 				row.tip = {
@@ -1096,7 +1097,10 @@ local GATHER_ICON = {
 
 function SP.ZoneFor(z)
 	local f = UnitFactionGroup and UnitFactionGroup("player")
-	return f == "Horde" and z.horde or z.alliance
+	local text = f == "Horde" and z.horde or z.alliance
+	local level = UnitLevel and UnitLevel("player")
+	if issecretvalue and issecretvalue(level) then level = nil end
+	return SP.FitZones and SP.FitZones(text, level) or text
 end
 
 function SP.GatherZone(prof, skill)

@@ -21,6 +21,7 @@ local SWITCH = 1.15        -- only change recipe when another is 15% cheaper per
 local TRAIN_SPREAD = 10    -- a training fee counts as spread over this many points
 local GATHER_EFFORT = 40   -- gather & craft: each item you gather weighs like this many copper
 local VENDOR_GUESS = 50    -- a vendor material with no known price
+local REACH_PENALTY = 4    -- gather & craft: a material none of your characters can gather yet weighs this much more
 
 -- Chance of a skill-up for recipe r at `level` (we're at `skill` now), from
 -- the colors alone.
@@ -123,6 +124,12 @@ function SP.MakePlan(prof, recipes, db, others, candidates)
 				elseif how == "smelt" then p, src = GATHER_EFFORT * 1.5, how
 				elseif how == "vendor" then p, src = (src == "vendor" and p) or VENDOR_GUESS, "vendor"
 				else p, src = nil, nil end
+				-- needs a gathering skill none of your characters has yet: leave it for later
+				if how == "gather" or how == "smelt" then
+					local able = false
+					for _, g in ipairs(SP.Gatherers(id) or {}) do if g.ok then able = true end end
+					if not able then p = p * REACH_PENALTY end
+				end
 			end
 			priceOf[id] = { p = p, src = src }
 		end
