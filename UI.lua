@@ -614,6 +614,36 @@ function UI:Show(prof, plan, loading)
 			.. (top and (", most from " .. top.count .. "x " .. name) or "") .. "."
 	end
 	f.note:SetText(table.concat(notes, " "))
+	self:FitList(#plan.shopping)
+	C_Timer.After(0, function() if UI.frame and UI.frame:IsShown() then UI:FitList(#plan.shopping) end end)
+end
+
+-- Long notes grow upward over the shopping list: hide the rows they would
+-- cover, and say how many more there are on the last row that fits.
+function UI:FitList(total)
+	local f = self.frame
+	local noteTop = f and f.note and f.note:GetTop()
+	if not noteTop or (f.note:GetText() or "") == "" then return end
+	local shown, lastFit = 0, nil
+	for i = 1, MAX_ITEMS do
+		local row = self.items[i]
+		if row and row:IsShown() then
+			shown = shown + 1
+			local bottom = row:GetBottom()
+			if bottom and bottom < noteTop + 2 then
+				row:Hide()
+			else
+				lastFit = i
+			end
+		end
+	end
+	if lastFit and lastFit < math.min(total, MAX_ITEMS) or (lastFit and total > MAX_ITEMS and lastFit < MAX_ITEMS) then
+		local row = self.items[lastFit]
+		row.text:SetText("... and " .. (total - lastFit + 1) .. " more items")
+		row.right:SetText("")
+		row.icon:SetTexture(nil)
+		row.tip = nil
+	end
 end
 
 ---------------------------------------------------------------------------
