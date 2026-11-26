@@ -78,6 +78,19 @@ function SP.MakePlan(prof, recipes, db, others, candidates)
 	if target <= skill then plan.done = true return plan end
 
 	candidates = candidates or {}
+	-- recipes with a cooldown (transmutes, Mooncloth) can't be crafted over
+	-- and over: leave them out, also as a way to make materials
+	if SP.COOLDOWN then
+		local function NoCooldown(list)
+			if not list then return list end
+			local keep = {}
+			for _, r in ipairs(list) do
+				if (SP.COOLDOWN[r.id] or 0) <= 300 then keep[#keep + 1] = r end
+			end
+			return keep
+		end
+		recipes, others, candidates = NoCooldown(recipes), NoCooldown(others), NoCooldown(candidates)
+	end
 	-- recipes only a specialist can learn: only if you're that specialist
 	if SP.SpecBlocks then
 		local have, keep = SP.MySpecs(), {}

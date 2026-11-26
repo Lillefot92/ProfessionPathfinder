@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.2
+
+- Recipes with a cooldown are no longer planned: the transmutes (Iron to Gold, Mithril to Truesilver, Arcanite, the elemental ones), Mooncloth and Refined Scale of Onyxia. You can only make them once in a while, so they can't be part of a leveling route, and they aren't used to make materials either. Thanks for the report on CurseForge!
+
 ## 1.2.1
 
 Specializations, and characters on realms whose name the game doesn't always give.
