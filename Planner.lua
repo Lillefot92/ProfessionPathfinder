@@ -69,6 +69,30 @@ function SP.Chance(r, level, skill)
 	return max(0.01, p)
 end
 
+-- How many crafts a plan takes, and about how long (cast times from the game)
+function SP.PlanTime(plan)
+	local crafts, seconds = 0, 0
+	for _, list in ipairs({ plan.steps or {}, plan.prep or {} }) do
+		for _, s in ipairs(list) do
+			crafts = crafts + (s.crafts or 0)
+			seconds = seconds + (s.crafts or 0) * (SP.CastSeconds and SP.CastSeconds(s.recipe.id) or 3)
+		end
+	end
+	return crafts, seconds
+end
+
+-- Merchant's Favor the plan spends on recipes (each recipe once)
+function SP.PlanFavor(plan)
+	local seen, total = {}, 0
+	for _, list in ipairs({ plan.steps or {}, plan.prep or {} }) do
+		for _, s in ipairs(list) do
+			local r = s.recipe
+			if r and r.unlearned and r.favor and r.how == "vendor" and not seen[r] then seen[r] = true; total = total + r.favor end
+		end
+	end
+	return total
+end
+
 function SP.MakePlan(prof, recipes, db, others, candidates)
 	local skill, cap = prof.skill, prof.max
 	local target = cap

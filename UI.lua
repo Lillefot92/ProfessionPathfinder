@@ -544,6 +544,11 @@ function UI:Show(prof, plan, loading)
 		self.items[MAX_ITEMS].tip = nil
 	end
 
+	-- crafts and roughly how long they take
+	local crafts, seconds = SP.PlanTime(plan)
+	if crafts > 0 then
+		f.planHeader:SetText("Plan: " .. crafts .. " crafts, " .. SP.Duration(seconds) .. " (click a step)")
+	end
 	if plan.selfGather then
 		f.total:SetText("Gold to " .. (plan.reached or plan.to or "?") .. ": " .. SP.Money(plan.total)
 			.. "  |cff40bf40+ " .. (plan.gatherCount or 0) .. " things to gather|r")
@@ -552,6 +557,13 @@ function UI:Show(prof, plan, loading)
 			.. "  |cff999999(" .. SP.Money(plan.net) .. " after selling what you craft)|r")
 	else
 		f.total:SetText("Estimated cost to " .. (plan.reached or plan.to or "?") .. ": " .. SP.Money(plan.total))
+	end
+	-- plans bought with Merchant's Favor
+	local favor = SP.PlanFavor and SP.PlanFavor(plan) or 0
+	if favor > 0 then
+		local have = SP.CurrencyAmount(3402) or 0
+		f.total:SetText(f.total:GetText() .. (favor > have and "  |cffff6060+ " or "  |cff66ccff+ ") .. favor .. " " .. SP.CurrencyName(3402)
+			.. (favor > have and (" (you have " .. have .. ")") or "") .. "|r")
 	end
 	self.next = SP.NextCraft(plan)
 	self:UpdateCraftButton()
@@ -1046,6 +1058,8 @@ local panel = Panel.Build("Profession Pathfinder",
 			"Materials in your bags and bank are taken off the shopping list." },
 		{ "choice", "resale", "Count what I get back", { { "off", "Off" }, { "vendor", "Selling to a vendor" }, { "best", "Vendor or AH, best" } },
 			"Shows what you'd get back for the things you craft. Vendor: what a merchant pays. Vendor or AH: whichever pays more, with Auction House prices from Auctionator after the 5% cut. Things the plan uses later (like bars for your next recipe) aren't counted as sold." },
+		{ "check", "favorPlans", "Use plans bought with Merchant's Favor",
+			"The trade camps (Durotar Supply and Logistics west of the Crossroads, Azeroth Commerce Authority at Three Corners) sell plans for Merchant's Favor. On: the plan uses them when you have the Favor and the reputation. Off: they're only shown as a way to get further." },
 		{ "check", "netPick", "Pick recipes by cost after selling",
 			"Off: recipes are picked by what you pay now. On: by what's left after selling what you craft. That's cheaper in the end, but can need much more gold up front." },
 		{ "number", "target", "Plan up to", 0, 300, 5, function(v) return v == 0 and "Skill cap" or string.format("skill %d", v) end,

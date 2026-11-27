@@ -212,6 +212,40 @@ function SP.FactionName(factionID)
 	return FACTION_NAMES[factionID] or ("faction " .. factionID)
 end
 
+-- Your faction's trade company (the camps that sell plans for Merchant's Favor)
+function SP.TradeFaction()
+	local f = UnitFactionGroup and UnitFactionGroup("player")
+	return f == "Horde" and 2587 or (f == "Alliance" and 2586 or nil)
+end
+
+-- How much of a currency you have, and its name
+local CURRENCY_NAMES = { [3402] = "Merchant's Favor" }
+function SP.CurrencyAmount(id)
+	if C_CurrencyInfo and C_CurrencyInfo.GetCurrencyInfo then
+		local ok, info = pcall(C_CurrencyInfo.GetCurrencyInfo, id)
+		if ok and type(info) == "table" and type(info.quantity) == "number" then return info.quantity end
+	end
+	if GetCurrencyInfo then
+		local ok, _, amount = pcall(GetCurrencyInfo, id)
+		if ok and type(amount) == "number" then return amount end
+	end
+end
+
+function SP.CurrencyName(id)
+	if C_CurrencyInfo and C_CurrencyInfo.GetCurrencyInfo then
+		local ok, info = pcall(C_CurrencyInfo.GetCurrencyInfo, id)
+		if ok and type(info) == "table" and type(info.name) == "string" and info.name ~= "" then return info.name end
+	end
+	return CURRENCY_NAMES[id] or ("currency " .. id)
+end
+
+-- How to earn Merchant's Favor and trade company reputation
+function SP.FavorHow()
+	local f = UnitFactionGroup and UnitFactionGroup("player")
+	local who = f == "Alliance" and "Marcy Baker at Three Corners, Redridge" or "Dokimi west of the Crossroads"
+	return "Earn Merchant's Favor by turning in Waylaid Crates to " .. who .. ", and reputation with Craftsman's Writs"
+end
+
 function SP.StandingName(standing)
 	if not standing then return "?" end
 	local label = _G["FACTION_STANDING_LABEL" .. (standing + 1)]
@@ -244,9 +278,18 @@ function SP.RecipeSources(spellID)
 	if not rows then return {} end
 	local out = {}
 	for _, e in ipairs(rows) do
-		local item, skill, price, bop, vendors, drops, nDrops, objects, quests, faction, standing =
-			e[1], e[2], e[3], e[4], e[5], e[6], e[7], e[8], e[9], e[10], e[11]
+		local item, skill, price, bop, vendors, drops, nDrops, objects, quests, faction, standing, currency, amount =
+			e[1], e[2], e[3], e[4], e[5], e[6], e[7], e[8], e[9], e[10], e[11], e[12], e[13]
+		if faction == -1 then faction = SP.TradeFaction() end -- your trade company
 		local base = { item = item, skill = skill, bop = bop }
+		-- a plan bought with a currency (Merchant's Favor): planned only if you have
+		-- enough of it, and the option is on
+		local curOK = true
+		if currency then
+			local haveCur = SP.CurrencyAmount(currency)
+			base.currency, base.amount, base.haveCur = currency, amount, haveCur
+			curOK = not (SP.db and SP.db.favorPlans == false) and (haveCur or 0) >= amount
+		end
 		local function Add(t) for k, v in pairs(base) do if t[k] == nil then t[k] = v end end out[#out + 1] = t end
 		-- a plan that needs reputation: only if you have it
 		local have = faction and SP.Standing(faction)
@@ -267,7 +310,10 @@ function SP.RecipeSources(spellID)
 			elseif (npc.rep and not (faction and repOK)) or not repOK then rep[#rep + 1] = npc
 			else open[#open + 1] = npc end
 		end
-		if open[1] then Add({ kind = "vendor", price = price, npc = open[1], others = #open - 1 }) end
+		if open[1] then
+			if curOK then Add({ kind = "vendor", price = price, npc = open[1], others = #open - 1 })
+			else Add({ kind = "favor", npc = open[1] }) end
+		end
 		if rep[1] then Add({ kind = "rep", price = price, npc = rep[1] }) end
 		if not bop and repOK then
 			local ah = SP.Price and SP.Price(item)
@@ -294,14 +340,24 @@ function SP.SourceText(s)
 	if s.kind == "bags" then return "You have " .. item .. ": use it to learn the recipe." end
 	if s.kind == "alt" then return s.alt.name .. " has " .. item .. " (" .. s.alt.spot .. "): mail it to this character." end
 	if s.kind == "vendor" then
-		return "Buy " .. item .. " from " .. s.npc.name .. " (" .. SP.NpcPlace(s.npc) .. ")"
-			.. (s.price and (" for about " .. SP.Money(s.price)) or "") .. "."
+		local cost = s.currency and (" for " .. s.amount .. " " .. SP.CurrencyName(s.currency))
+			or (s.price and (" for about " .. SP.Money(s.price))) or ""
+		return "Buy " .. item .. " from " .. s.npc.name .. " (" .. SP.NpcPlace(s.npc) .. ")" .. cost .. "."
+	end
+	if s.kind == "favor" then
+		local name = SP.CurrencyName(s.currency)
+		local at = item .. " costs " .. s.amount .. " " .. name .. " at " .. s.npc.name .. " (" .. SP.NpcPlace(s.npc) .. ")"
+		if SP.db and SP.db.favorPlans == false then
+			return at .. ". Plans bought with " .. name .. " are turned off in the options."
+		end
+		return at .. "; you have " .. (s.haveCur or 0) .. ". " .. SP.FavorHow() .. "."
 	end
 	if s.kind == "rep" then
 		local who = s.npc.name .. " (" .. SP.NpcPlace(s.npc) .. ")"
 		if s.faction then
 			return item .. " is sold by " .. who .. " at " .. SP.StandingName(s.standing) .. " with " .. SP.FactionName(s.faction)
-				.. (s.have and (" (you're " .. SP.StandingName(s.have) .. ")") or "") .. "."
+				.. (s.have and (" (you're " .. SP.StandingName(s.have) .. ")") or "")
+				.. (s.currency and (", for " .. s.amount .. " " .. SP.CurrencyName(s.currency)) or "") .. "."
 		end
 		if s.npc.note then return item .. " is sold by " .. who .. ", " .. s.npc.note .. "." end
 		return item .. " is sold by " .. who .. " to players with enough reputation."
@@ -336,7 +392,9 @@ function SP.LearnWhere(prof, e)
 	end
 	if how == "ah" then return "the Auction House (" .. (item or "recipe") .. ")" end
 	if how == "vendor" and e.where then
-		return (item or "the recipe") .. " from " .. e.where.name .. " in " .. SP.NpcPlace(e.where), e.where
+		local favor = e.recipe and e.recipe.favor
+		local cost = favor and (" (" .. favor .. " " .. SP.CurrencyName(3402) .. ")") or ""
+		return (item or "the recipe") .. " from " .. e.where.name .. " in " .. SP.NpcPlace(e.where) .. cost, e.where
 	end
 	-- a specialist's recipe: the specialization trainer
 	local id = e.id or (e.recipe and e.recipe.id)
@@ -414,7 +472,7 @@ local function RecipeName(id)
 	end
 end
 
-local ORDER = { rep = 1, quest = 2, drop = 3 }
+local ORDER = { rep = 1, favor = 1, quest = 2, drop = 3 }
 function SP.WaysPast(prof, level, count)
 	local data = prof and SP.DATA and SP.DATA[prof.id]
 	if not (data and level) then return {} end
@@ -471,9 +529,13 @@ function SP.WayText(f)
 		if s.faction then
 			text = "plans from " .. who .. ", at " .. SP.StandingName(s.standing) .. " with " .. SP.FactionName(s.faction)
 				.. (s.have and ("; you're " .. SP.StandingName(s.have)) or "")
+				.. (s.currency and (", " .. s.amount .. " " .. SP.CurrencyName(s.currency)) or "")
 		else
 			text = "plans from " .. who .. (s.npc.note and (", " .. s.npc.note) or "")
 		end
+	elseif s.kind == "favor" then
+		text = "plans from " .. s.npc.name .. ", " .. SP.NpcPlace(s.npc) .. ", " .. s.amount .. " " .. SP.CurrencyName(s.currency)
+			.. "; you have " .. (s.haveCur or 0)
 	elseif s.kind == "quest" then
 		local q = SP.QUEST_NAMES and SP.QUEST_NAMES[s.quest] or ("quest " .. s.quest)
 		if C_QuestLog and C_QuestLog.GetTitleForQuestID then

@@ -46,5 +46,15 @@ p = SP.MakePlan({ name = "Tailoring", id = 197, skill = 250, max = 260 }, {}, db
 print("tailoring:", p.steps[1] and p.steps[1].recipe.name)
 assert(p.steps[1] and p.steps[1].recipe == POT)
 for _, s in ipairs(p.steps) do assert(s.recipe ~= MOON) end
+
+-- crafts and time: cast times from the game, 3 seconds when it doesn't say
+C_Spell = C_Spell or {}
+C_Spell.GetSpellInfo = function(id) return { castTime = id == 18401 and 5000 or 0 } end
+local crafts, seconds = SP.PlanTime(p)
+print("tailoring:", crafts, "crafts,", SP.Duration(seconds))
+local n = 0 for _, s in ipairs(p.steps) do n = n + s.crafts end for _, s in ipairs(p.prep) do n = n + s.crafts end
+assert(crafts == n and crafts > 0)
+assert(seconds == p.steps[1].crafts * 5 + (seconds - p.steps[1].crafts * 5), "")
+assert(SP.Duration(20) == "about 1 min" and SP.Duration(25 * 60) == "about 25 min" and SP.Duration(70 * 60) == "about 1 h 10 min" and SP.Duration(120 * 60) == "about 2 h")
 ''')
 print("ok")

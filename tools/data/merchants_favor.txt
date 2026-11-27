@@ -1,0 +1,322 @@
+# WoW Forever trade camp recipes: Profession | Recipe | skill | Merchant's Favor | reputation
+# Sold by both camps (Durotar Supply and Logistics for the Horde, Azeroth Commerce
+# Authority for the Alliance). From wow-professions.com's Merchant's Favor guide and
+# vendor pages, Nov 27 2026. Names are checked against the game's item table.
+Alchemy | Elixir of Lesser Spirit | 65 | 45 |
+Alchemy | Lesser Mageblood Elixir | 75 | 45 |
+Alchemy | Elixir of Lesser Intellect | 95 | 45 |
+Alchemy | Lesser Cleric's Elixir | 95 | 45 |
+Alchemy | Lesser Arcane Elixir | 120 | 45 |
+Alchemy | Mender's Potion | 130 | 45 |
+Alchemy | Spellblasting Potion | 135 | 45 |
+Alchemy | Frenzy Potion | 140 | 45 |
+Alchemy | Elixir of Greater Spirit | 165 | 120 | Friendly
+Alchemy | Greater Mageblood Elixir | 175 | 120 | Friendly
+Alchemy | Greater Cleric's Elixir | 195 | 120 | Friendly
+Alchemy | Elixir of Greater Fortitude | 200 | 120 | Friendly
+Alchemy | Dragonfire Potion | 245 | 120 | Friendly
+Alchemy | Elixir of the Phalanx | 250 | 180 | Honored
+Alchemy | Caustic Smog Potion | 265 | 180 | Honored
+Alchemy | Potion of Venomous Blood | 275 | 180 | Honored
+Alchemy | Elixir of Cunning | 275 | 180 | Honored
+Alchemy | Elixir of Ferocity | 275 | 180 | Honored
+Alchemy | Elixir of Sages | 275 | 180 | Honored
+Alchemy | Elixir of the Whale | 275 | 180 | Honored
+Alchemy | Major Mender's Potion | 280 | 180 | Honored
+Alchemy | Potion of Elemental Purging | 280 | 180 | Honored
+Alchemy | Elixir of the Owl | 280 | 180 | Honored
+Alchemy | Major Spellblasting Potion | 285 | 180 | Honored
+Alchemy | Elixir of Nature Power | 285 | 180 | Honored
+Alchemy | Elixir of Wicked Regeneration | 285 | 180 | Honored
+Alchemy | Major Frenzy Potion | 290 | 240 | Honored
+Alchemy | Elixir of the Grizzly | 300 | 240 | Honored
+Blacksmithing | Acolyte's Chain Belt | 45 | 30 |
+Blacksmithing | Acolyte's Gloves | 80 | 30 |
+Blacksmithing | Acolyte's Boots | 85 | 30 |
+Blacksmithing | Acolyte's Silvered Chain Helm | 95 | 30 |
+Blacksmithing | Acolyte's Silvered Chain Shirt | 110 | 30 |
+Blacksmithing | Acolyte's Silvered Chain Leggings | 125 | 30 |
+Blacksmithing | Crusader's Chain Belt | 45 | 30 |
+Blacksmithing | Crusader's Gloves | 80 | 30 |
+Blacksmithing | Crusader's Boots | 85 | 30 |
+Blacksmithing | Crusader's Silvered Chain Helm | 95 | 30 |
+Blacksmithing | Crusader's Silvered Chain Shirt | 110 | 30 |
+Blacksmithing | Crusader's Silvered Chain Leggings | 125 | 30 |
+Blacksmithing | Guard's Chain Belt | 45 | 30 |
+Blacksmithing | Guard's Gloves | 80 | 30 |
+Blacksmithing | Guard's Boots | 85 | 30 |
+Blacksmithing | Guard's Silvered Chain Helm | 95 | 30 |
+Blacksmithing | Guard's Silvered Chain Shirt | 110 | 30 |
+Blacksmithing | Guard's Silvered Chain Leggings | 125 | 30 |
+Blacksmithing | Protector's Chain Belt | 45 | 30 |
+Blacksmithing | Protector's Gloves | 80 | 30 |
+Blacksmithing | Protector's Boots | 85 | 30 |
+Blacksmithing | Protector's Silvered Chain Helm | 95 | 30 |
+Blacksmithing | Protector's Silvered Chain Shirt | 110 | 30 |
+Blacksmithing | Protector's Silvered Chain Leggings | 125 | 30 |
+Blacksmithing | Veteran's Chain Belt | 45 | 30 |
+Blacksmithing | Veteran's Gloves | 80 | 30 |
+Blacksmithing | Veteran's Boots | 85 | 30 |
+Blacksmithing | Veteran's Silvered Chain Helm | 95 | 30 |
+Blacksmithing | Veteran's Silvered Chain Shirt | 110 | 30 |
+Blacksmithing | Veteran's Silvered Chain Leggings | 125 | 30 |
+Blacksmithing | Justicar's Gauntlet | 175 | 60 | Friendly
+Blacksmithing | Justicar's Pauldrons | 210 | 60 | Friendly
+Blacksmithing | Justicar's Wristguards | 225 | 90 | Honored
+Blacksmithing | Justicar's Wristguard | 225 | 90 | Honored
+Blacksmithing | Justicar's Sabatons | 240 | 90 | Honored
+Blacksmithing | Justicar's Waistguard | 250 | 90 | Honored
+Blacksmithing | Officer's Gauntlet | 175 | 60 | Friendly
+Blacksmithing | Officer's Pauldrons | 210 | 60 | Friendly
+Blacksmithing | Officer's Wristguards | 225 | 90 | Honored
+Blacksmithing | Officer's Wristguard | 225 | 90 | Honored
+Blacksmithing | Officer's Sabatons | 240 | 90 | Honored
+Blacksmithing | Officer's Waistguard | 250 | 90 | Honored
+Blacksmithing | Prefect's Gauntlet | 175 | 60 | Friendly
+Blacksmithing | Prefect's Pauldrons | 210 | 60 | Friendly
+Blacksmithing | Prefect's Wristguards | 225 | 90 | Honored
+Blacksmithing | Prefect's Wristguard | 225 | 90 | Honored
+Blacksmithing | Prefect's Sabatons | 240 | 90 | Honored
+Blacksmithing | Prefect's Waistguard | 250 | 90 | Honored
+Blacksmithing | Sentinel's Gauntlet | 175 | 60 | Friendly
+Blacksmithing | Sentinel's Pauldrons | 210 | 60 | Friendly
+Blacksmithing | Sentinel's Wristguards | 225 | 90 | Honored
+Blacksmithing | Sentinel's Wristguard | 225 | 90 | Honored
+Blacksmithing | Sentinel's Sabatons | 240 | 90 | Honored
+Blacksmithing | Sentinel's Waistguard | 250 | 90 | Honored
+Blacksmithing | Warder's Gauntlet | 175 | 60 | Friendly
+Blacksmithing | Warder's Pauldrons | 210 | 60 | Friendly
+Blacksmithing | Warder's Wristguards | 225 | 90 | Honored
+Blacksmithing | Warder's Wristguard | 225 | 90 | Honored
+Blacksmithing | Warder's Sabatons | 240 | 90 | Honored
+Blacksmithing | Warder's Waistguard | 250 | 90 | Honored
+Blacksmithing | Cracked Blacksmith Hammer | 110 | 30 |
+Blacksmithing | Mithril Blacksmith Hammer | 195 | 60 | Friendly
+Blacksmithing | Thorium Cestus | 250 | 90 | Honored
+Blacksmithing | Thorium Greatmace | 250 | 90 | Honored
+Blacksmithing | Arcanite Blacksmith Hammer | 270 | 90 | Honored
+Blacksmithing | Enriched Thorium Breastplate | 300 | 120 | Honored
+Blacksmithing | Enriched Thorium Helm | 300 | 120 | Honored
+Blacksmithing | Enriched Thorium Leggings | 300 | 120 | Honored
+Blacksmithing | Legionite Glaive | 300 | 120 | Honored
+Cooking | Venomous Smoothie | 25 | 30 |
+Cooking | Slimy Smoothie | 100 | 30 |
+Cooking | Mrrggl Smrrthle | 125 | 30 |
+Cooking | Calcified Smoothie | 180 | 60 | Friendly
+Cooking | Spicy Smoothie | 200 | 60 | Friendly
+Cooking | Wicked Smoothie | 250 | 90 | Honored
+Enchanting | Enchant Weapon - Insight | 140 | 45 | 
+Enchanting | Enchant Weapon - Recovery | 140 | 45 | 
+Enchanting | Enchant Weapon - Revelation | 140 | 45 | 
+Enchanting | Mystic Mushroom | 130 | 45 | 
+Enchanting | Polished Driftwood Icon | 130 | 45 | 
+Enchanting | Tenets of the Silver Hand | 130 | 45 | 
+Enchanting | Glimmering Staff | 140 | 45 | 
+Enchanting | Orb of Mystic Insight | 140 | 45 | 
+Enchanting | Orb of Souls | 140 | 45 | 
+Enchanting | Soulstaff | 140 | 45 | 
+Enchanting | Enchant Necklace - Agility | 210 | 120 | Friendly
+Enchanting | Enchant Necklace - Deflection | 210 | 120 | Friendly
+Enchanting | Enchant Necklace - Healing Power | 210 | 120 | Friendly
+Enchanting | Enchant Necklace - Spell Power | 210 | 120 | Friendly
+Enchanting | Enchant Necklace - Strength | 210 | 120 | Friendly
+Enchanting | Libram of Invocation | 210 | 120 | Friendly
+Enchanting | Talons of Wrath | 210 | 120 | Friendly
+Enchanting | Totem of Ancestral Protection | 210 | 120 | Friendly
+Enchanting | Enchant Chest - Absorption | 220 | 120 | Friendly
+Enchanting | Dreamstaff | 220 | 120 | Friendly
+Enchanting | Radiant Staff | 220 | 120 | Friendly
+Enchanting | Truesilver Conduit | 220 | 120 | Friendly
+Enchanting | Twisting Essence Jar | 220 | 120 | Friendly
+Enchanting | Brilliant Wand | 275 | 180 | Honored
+Enchanting | Enchant 2H Weapon - Mighty Healing Power | 300 | 240 | Honored
+Enchanting | Enchant 2H Weapon - Mighty Spell Power | 300 | 240 | Honored
+Enchanting | Enchant 2H Weapon - Spellblasting | 300 | 240 | Honored
+Enchanting | Enchant Bracer - Greater Spellpower | 300 | 240 | Honored
+Enchanting | Enchant Bracer - Superior Deflection | 300 | 240 | Honored
+Enchanting | Enchant Bracer - Superior Intellect | 300 | 240 | Honored
+Enchanting | Enchant Cloak - Agility | 300 | 240 | Honored
+Enchanting | Enchant Gloves - Arcane Power | 300 | 240 | Honored
+Enchanting | Enchant Gloves - Holy Power | 300 | 240 | Honored
+Enchanting | Enchant Gloves - Natural Power | 300 | 240 | Honored
+Enchanting | Enchant Gloves - Superior Strength | 300 | 240 | Honored
+Enchanting | Enchant Off-Hand - Wisdom | 300 | 240 | Honored
+Enchanting | Idol of the Dream | 300 | 240 | Honored
+Enchanting | Libram of Holy Alacrity | 300 | 240 | Honored
+Enchanting | Totem of Thunder | 300 | 240 | Honored
+Engineering | SAF-T Dynamite | 25 | 45 | 
+Engineering | SAF-T Tabs | 25 | 45 | 
+Engineering | SAF-T Copper Bomb | 55 | 45 | 
+Engineering | Satchel of Copper Bombs | 85 | 45 | 
+Engineering | EZ-Thro Wrap | 100 | 45 | 
+Engineering | EZ-Thro Copper Bomb XL | 130 | 45 | 
+Engineering | No Slip SAF-T Padding | 145 | 45 | 
+Engineering | Satchel of Bronze Bombs | 165 | 180 | Friendly
+Engineering | Clanking Cord | 175 | 180 | Friendly
+Engineering | Gizmo Girdle | 175 | 180 | Friendly
+Engineering | Whimsical Waistwrap | 175 | 180 | Friendly
+Engineering | SAF-T Bell | 175 | 180 | Friendly
+Engineering | EZ-Thro Fireproof Fuse | 190 | 180 | Friendly
+Engineering | Bent Goggles | 200 | 180 | Friendly
+Engineering | Dented Goggles | 200 | 180 | Friendly
+Engineering | Floppy Goggles | 200 | 180 | Friendly
+Engineering | Stuckbutton Goggles | 200 | 180 | Friendly
+Engineering | Emergency Field Cloak | 225 | 270 | Honored
+Engineering | Compact Critter Carrier | 225 | 270 | Honored
+Engineering | Satchel of Iron Bombs | 230 | 270 | Honored
+Engineering | SAF-T Disposable Parachute | 250 | 270 | Honored
+Engineering | Loot-A-Rang | 275 | 270 | Honored
+Engineering | Satchel of Dark Iron Bombs | 285 | 270 | Honored
+Engineering | Gnomish Poultryizer | 300 | 360 | Honored
+Engineering | Stealthman 52 | 300 | 360 | Honored
+Engineering | Ultralight Goblin Glider | 300 | 360 | Honored
+Engineering | Ultrasafe Rechargeable Battery | 300 | 360 | Honored
+Leatherworking | Brawler's Leather Belt | 60 | 30 |
+Leatherworking | Brawler's Leather Gloves | 75 | 30 |
+Leatherworking | Brawler's Leather Boots | 85 | 30 |
+Leatherworking | Brawler's Leather Hood | 100 | 30 |
+Leatherworking | Brawler's Leather Tunic | 110 | 30 |
+Leatherworking | Brawler's Leather Legguards | 125 | 30 |
+Leatherworking | Defender's Leather Belt | 60 | 30 |
+Leatherworking | Defender's Leather Gloves | 75 | 30 |
+Leatherworking | Defender's Leather Boots | 85 | 30 |
+Leatherworking | Defender's Leather Hood | 100 | 30 |
+Leatherworking | Defender's Leather Tunic | 110 | 30 |
+Leatherworking | Defender's Leather Kilt | 125 | 30 |
+Leatherworking | Trapper's Leather Belt | 60 | 30 |
+Leatherworking | Trapper's Leather Gloves | 75 | 30 |
+Leatherworking | Trapper's Leather Boots | 85 | 30 |
+Leatherworking | Trapper's Leather Hood | 100 | 30 |
+Leatherworking | Trapper's Leather Tunic | 110 | 30 |
+Leatherworking | Trapper's Leather Legguards | 125 | 30 |
+Leatherworking | Totemic Leather Belt | 60 | 30 |
+Leatherworking | Totemic Leather Gloves | 75 | 30 |
+Leatherworking | Totemic Leather Boots | 85 | 30 |
+Leatherworking | Totemic Leather Hood | 100 | 30 |
+Leatherworking | Totemic Leather Tunic | 110 | 30 |
+Leatherworking | Totemic Leather Leggings | 125 | 30 |
+Leatherworking | Stormrider's Leather Belt | 60 | 30 |
+Leatherworking | Stormrider's Leather Gloves | 75 | 30 |
+Leatherworking | Stormrider's Leather Boots | 85 | 30 |
+Leatherworking | Stormrider's Leather Hood | 100 | 30 |
+Leatherworking | Stormrider's Leather Tunic | 110 | 30 |
+Leatherworking | Stormrider's Leather Kilt | 125 | 30 |
+Leatherworking | Wisdom's Leather Belt | 60 | 30 |
+Leatherworking | Wisdom's Leather Gloves | 75 | 30 |
+Leatherworking | Wisdom's Leather Boots | 85 | 30 |
+Leatherworking | Wisdom's Leather Hood | 100 | 30 |
+Leatherworking | Wisdom's Leather Tunic | 110 | 30 |
+Leatherworking | Wisdom's Leather Leggings | 125 | 30 |
+Leatherworking | Prowler's Leather Gloves | 175 | 60 | Friendly
+Leatherworking | Prowler's Leather Shoulders | 210 | 60 | Friendly
+Leatherworking | Prowler's Leather Bracers | 225 | 90 | Honored
+Leatherworking | Prowler's Leather Boots | 235 | 90 | Honored
+Leatherworking | Prowler's Leather Waistguard | 250 | 90 | Honored
+Leatherworking | Skulker's Leather Gloves | 175 | 60 | Friendly
+Leatherworking | Skulker's Leather Shoulders | 210 | 60 | Friendly
+Leatherworking | Skulker's Leather Bracers | 225 | 90 | Honored
+Leatherworking | Skulker's Leather Boots | 235 | 90 | Honored
+Leatherworking | Skulker's Leather Waistguard | 250 | 90 | Honored
+Leatherworking | Warden's Leather Gloves | 175 | 60 | Friendly
+Leatherworking | Warden's Leather Shoulders | 210 | 60 | Friendly
+Leatherworking | Warden's Leather Bracers | 225 | 90 | Honored
+Leatherworking | Warden's Leather Boots | 235 | 90 | Honored
+Leatherworking | Warden's Leather Waistguard | 250 | 90 | Honored
+Leatherworking | Stalker's Leather Gloves | 175 | 60 | Friendly
+Leatherworking | Stalker's Mail Shoulders | 210 | 60 | Friendly
+Leatherworking | Stalker's Mail Shoulder | 210 | 60 | Friendly
+Leatherworking | Stalker's Mail Bracers | 225 | 90 | Honored
+Leatherworking | Stalker's Mail Sabatons | 235 | 90 | Honored
+Leatherworking | Stalker's Mail Belt | 250 | 90 | Honored
+Leatherworking | Skirmisher's Leather Gloves | 175 | 60 | Friendly
+Leatherworking | Skirmisher's Mail Shoulders | 210 | 60 | Friendly
+Leatherworking | Skirmisher's Mail Bracers | 225 | 90 | Honored
+Leatherworking | Skirmisher's Mail Sabatons | 235 | 90 | Honored
+Leatherworking | Skirmisher's Mail Belt | 250 | 90 | Honored
+Leatherworking | Skycaller's Leather Gloves | 175 | 60 | Friendly
+Leatherworking | Skycaller's Leather Shoulders | 210 | 60 | Friendly
+Leatherworking | Skycaller's Mail Shoulders | 210 | 60 | Friendly
+Leatherworking | Skycaller's Leather Bracers | 225 | 90 | Honored
+Leatherworking | Skycaller's Mail Bracers | 225 | 90 | Honored
+Leatherworking | Skycaller's Leather Boots | 235 | 90 | Honored
+Leatherworking | Skycaller's Mail Sabatons | 235 | 90 | Honored
+Leatherworking | Skycaller's Leather Waistguard | 250 | 90 | Honored
+Leatherworking | Skycaller's Mail Belt | 250 | 90 | Honored
+Leatherworking | Mender's Leather Gloves | 175 | 60 | Friendly
+Leatherworking | Mender's Leather Shoulders | 210 | 60 | Friendly
+Leatherworking | Mender's Mail Shoulders | 210 | 60 | Friendly
+Leatherworking | Mender's Leather Bracers | 225 | 90 | Honored
+Leatherworking | Mender's Mail Bracers | 225 | 90 | Honored
+Leatherworking | Mender's Leather Boots | 235 | 90 | Honored
+Leatherworking | Mender's Mail Sabatons | 235 | 90 | Honored
+Leatherworking | Mender's Leather Waistguard | 250 | 90 | Honored
+Leatherworking | Mender's Mail Belt | 250 | 90 | Honored
+Leatherworking | Forceful Thick Armor Kit | 185 | 60 | Friendly
+Leatherworking | Mystic Rugged Armor Kit | 235 | 90 | Honored
+Tailoring | Flame Boots | 60 | 30 |
+Tailoring | Flame Gloves | 75 | 30 |
+Tailoring | Flame Sash | 85 | 30 |
+Tailoring | Flame Circlet | 100 | 30 |
+Tailoring | Flame Gown | 110 | 30 |
+Tailoring | Flame Leggings | 125 | 30 |
+Tailoring | Silky Boots | 60 | 30 |
+Tailoring | Silky Gloves | 75 | 30 |
+Tailoring | Silky Sash | 85 | 30 |
+Tailoring | Silky Circlet | 100 | 30 |
+Tailoring | Silky Gown | 110 | 30 |
+Tailoring | Silky Leggings | 125 | 30 |
+Tailoring | Pearly Boots | 60 | 30 |
+Tailoring | Pearly Gloves | 75 | 30 |
+Tailoring | Pearly Sash | 85 | 30 |
+Tailoring | Pearly Circlet | 100 | 30 |
+Tailoring | Pearly Gown | 110 | 30 |
+Tailoring | Pearly Leggings | 125 | 30 |
+Tailoring | Shadow Boots | 60 | 30 |
+Tailoring | Shadow Gloves | 75 | 30 |
+Tailoring | Shadow Sash | 85 | 30 |
+Tailoring | Shadow Circlet | 100 | 30 |
+Tailoring | Shadow Gown | 110 | 30 |
+Tailoring | Shadow Leggings | 125 | 30 |
+Tailoring | Shining Boots | 60 | 30 |
+Tailoring | Shining Gloves | 75 | 30 |
+Tailoring | Shining Sash | 85 | 30 |
+Tailoring | Shining Circlet | 100 | 30 |
+Tailoring | Shining Gown | 110 | 30 |
+Tailoring | Shining Leggings | 125 | 30 |
+Tailoring | Pristine Boots | 60 | 30 |
+Tailoring | Pristine Gloves | 75 | 30 |
+Tailoring | Pristine Sash | 85 | 30 |
+Tailoring | Pristine Circlet | 100 | 30 |
+Tailoring | Pristine Gown | 110 | 30 |
+Tailoring | Pristine Leggings | 125 | 30 |
+Tailoring | Fiery Handwraps | 165 | 60 | Friendly
+Tailoring | Netherflame Shoulders | 195 | 60 | Friendly
+Tailoring | Netherflame Cuffs | 205 | 60 | Friendly
+Tailoring | Fiery Waistcord | 215 | 60 | Friendly
+Tailoring | Fiery Sandals | 235 | 90 | Honored
+Tailoring | Frothing Handwraps | 165 | 60 | Friendly
+Tailoring | Netherfroth Shoulders | 195 | 60 | Friendly
+Tailoring | Netherfroth Cuffs | 205 | 60 | Friendly
+Tailoring | Frothing Waistcord | 215 | 60 | Friendly
+Tailoring | Frothing Sandals | 235 | 90 | Honored
+Tailoring | Golden Handwraps | 165 | 60 | Friendly
+Tailoring | Nethershine Shoulders | 195 | 60 | Friendly
+Tailoring | Nethershine Cuffs | 205 | 60 | Friendly
+Tailoring | Golden Waistcord | 215 | 60 | Friendly
+Tailoring | Golden Sandals | 235 | 90 | Honored
+Tailoring | Black Handwraps | 165 | 60 | Friendly
+Tailoring | Netherpearl Shoulders | 195 | 60 | Friendly
+Tailoring | Netherpearl Cuffs | 205 | 60 | Friendly
+Tailoring | Black Waistcord | 215 | 60 | Friendly
+Tailoring | Black Sandals | 235 | 90 | Honored
+Tailoring | Radiant Handwraps | 165 | 60 | Friendly
+Tailoring | Netherlight Shoulders | 195 | 60 | Friendly
+Tailoring | Netherlight Cuffs | 205 | 60 | Friendly
+Tailoring | Radiant Waistcord | 215 | 60 | Friendly
+Tailoring | Radiant Sandals | 235 | 90 | Honored
+Tailoring | Nethergeld Shoulders | 195 | 60 | Friendly
+Tailoring | Nethergeld Cuffs | 205 | 60 | Friendly
+Tailoring | Gilded Waistcord | 215 | 60 | Friendly
+Tailoring | Gilded Sandals | 235 | 90 | Honored
+Tailoring | Mageweave Reagent Bag | 190 | 60 | Friendly
+Tailoring | Runecloth Reagent Bag | 215 | 60 | Friendly

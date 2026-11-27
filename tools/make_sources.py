@@ -93,7 +93,31 @@ EXTRA_PLANS = {
 # (no x, y: they move between a few spots)
 EXTRA_NPCS = {
     900001: ("Pexmit", "", "AH", 0, 2482, None, None, "Dae'gun, Mount Hyjal"),
+    # The trade camps (Merchant's Favor): Durotar Supply and Logistics west of the
+    # Crossroads, Azeroth Commerce Authority at Three Corners in Redridge
+    900010: ("Apothecary Durelle", "Durotar Supply and Logistics", "H", 17, 1413, 49.8, 29.4, "The Barrens"),
+    900011: ("Gor'mak", "Durotar Supply and Logistics", "H", 17, 1413, 49.8, 29.6, "The Barrens"),
+    900012: ("Aza'bek", "Durotar Supply and Logistics", "H", 17, 1413, 49.6, 29.2, "The Barrens"),
+    900013: ("Beneris", "Durotar Supply and Logistics", "H", 17, 1413, 49.6, 29.8, "The Barrens"),
+    900014: ("Fizzlefuse", "Durotar Supply and Logistics", "H", 17, 1413, 49.8, 29.6, "The Barrens"),
+    900015: ("Pawani", "Durotar Supply and Logistics", "H", 17, 1413, 49.6, 29.6, "The Barrens"),
+    900016: ("Jim'bek", "Durotar Supply and Logistics", "H", 17, 1413, 49.6, 29.4, "The Barrens"),
+    900020: ("Nina Surefire", "Azeroth Commerce Authority", "A", 44, 1433, 10.5, 72.7, "Redridge Mountains"),
+    900021: ("Stondry Darkhammer", "Azeroth Commerce Authority", "A", 44, 1433, 10.5, 72.7, "Redridge Mountains"),
+    900022: ("Kalsey Sanden", "Azeroth Commerce Authority", "A", 44, 1433, 10.5, 72.7, "Redridge Mountains"),
+    900023: ("Alynsia", "Azeroth Commerce Authority", "A", 44, 1433, 10.5, 72.7, "Redridge Mountains"),
+    900024: ("Fritz Fizzle", "Azeroth Commerce Authority", "A", 44, 1433, 10.5, 72.7, "Redridge Mountains"),
+    900025: ("Daniel Stitchsong", "Azeroth Commerce Authority", "A", 44, 1433, 10.5, 72.7, "Redridge Mountains"),
+    900026: ("Mivin Shadowweave", "Azeroth Commerce Authority", "A", 44, 1433, 10.5, 72.7, "Redridge Mountains"),
 }
+CAMP_VENDORS = {"Alchemy": (900010, 900020), "Blacksmithing": (900011, 900021), "Cooking": (900012, 900022),
+                "Enchanting": (900013, 900023), "Engineering": (900014, 900024), "Leatherworking": (900015, 900025),
+                "Tailoring": (900016, 900026)}
+CAMP_LINE = {"Alchemy": 171, "Blacksmithing": 164, "Cooking": 185, "Enchanting": 333, "Engineering": 202,
+             "Leatherworking": 165, "Tailoring": 197}
+MERCHANTS_FAVOR = 3402          # the currency
+TRADE_FACTION = -1              # your faction's trade company (2587 Horde, 2586 Alliance)
+STANDING = {"": None, "Friendly": 4, "Honored": 5, "Revered": 6, "Exalted": 7}
 def flag(nid):
     r = npc[nid]
     if r.get(1) in REP_VENDORS: return "rep"
@@ -223,6 +247,36 @@ if sparse:
             recipes.setdefault(sid, []).append(e)
             recipe_ids.append(iid)
 
+# The trade camps' recipes (Merchant's Favor, and reputation with your trade company)
+camp_count = 0
+if sparse:
+    by_item_name = {}
+    for iid, r in sparse.items():
+        if iid >= 200000: by_item_name.setdefault(r["Display_lang"], []).append(iid)
+    PREFIX = ("Plans: ", "Pattern: ", "Recipe: ", "Formula: ", "Schematic: ")
+    here = os.path.dirname(os.path.abspath(__file__))
+    for raw in open(os.path.join(here, "data", "merchants_favor.txt"), encoding="utf-8"):
+        if raw.startswith("#") or not raw.strip(): continue
+        prof, name, skill, cost, standing = [x.strip() for x in raw.split("|")]
+        line = CAMP_LINE[prof]
+        variants = [name, name + "s", name[:-1] if name.endswith("s") else name]
+        iid = next((i for v in variants for p in PREFIX for i in by_item_name.get(p + v, [])), None)
+        sids = next((by_name[(line, norm(v))] for v in variants if (line, norm(v)) in by_name), None)
+        if not (iid and sids): continue
+        r = sparse[iid]
+        for nid in CAMP_VENDORS[prof]: ref(nid)
+        linked.update(sids)
+        for sid in sids:
+            if any(e["item"] == iid for e in recipes.get(sid, [])): continue
+            e = dict(item=iid, line=line, vendors=list(CAMP_VENDORS[prof]), drops=[], drops5=[], objs=0, quests=[],
+                     skill=int(r["RequiredSkillRank"] or 0) or int(skill), price=None, bop=r["Bonding"] == "1",
+                     currency=MERCHANTS_FAVOR, amount=int(cost))
+            if STANDING[standing]: e["faction"], e["standing"] = TRADE_FACTION, STANDING[standing]
+            recipes.setdefault(sid, []).append(e)
+            if iid not in recipe_ids: recipe_ids.append(iid)
+            camp_count += 1
+    print("trade camp recipes:", camp_count)
+
 # Probably taught by a trainer: not learned with the profession, no item
 # teaches it, and it belongs to this game (it makes an item WoW Forever has,
 # or it's an older enchant-style recipe that makes no item)
@@ -324,13 +378,16 @@ with open(OUT, "w", encoding="utf-8", newline="\n") as f:
         f.write("\t},\n")
     f.write("}\n\n-- Recipes from items: [recipe spell] = { {item, skill to learn, vendor price, bind on pickup,\n")
     f.write("--   vendors, NPCs that drop it (up to 5), number of NPCs that drop it, objects, quests,\n")
-    f.write("--   reputation faction needed to buy it, standing (0 Hated .. 3 Neutral, 4 Friendly, 5 Honored, 6 Revered, 7 Exalted)}, ... }\nSP.RECIPE_ITEMS = {\n")
+    f.write("--   reputation faction needed to buy it (-1: your trade company), standing (0 Hated .. 3 Neutral, 4 Friendly,\n")
+    f.write("--   5 Honored, 6 Revered, 7 Exalted), currency it costs, how much}, ... }\nSP.RECIPE_ITEMS = {\n")
     for sid in sorted(recipes):
         rows = []
         for e in recipes[sid]:
             row = "{%d,%s,%s,%s,%s,%s,%d,%d,%s" % (e["item"], e["skill"] or "nil", e["price"] or "nil", "true" if e["bop"] else "false",
                 ids([v for v in e["vendors"]]), ids(e["drops5"]), len(e["drops"]), e["objs"], ids(e["quests"]))
-            if e.get("faction"): row += ",%d,%d" % (e["faction"], e["standing"])
+            if e.get("faction") or e.get("currency"):
+                row += ",%s,%s" % (e.get("faction") or "nil", e.get("standing") if e.get("standing") is not None else "nil")
+            if e.get("currency"): row += ",%d,%d" % (e["currency"], e["amount"])
             rows.append(row + "}")
         f.write("\t[%d]={%s},\n" % (sid, ",".join(rows)))
     f.write("}\n\n-- Recipes probably taught by a trainer (no item teaches them): [skill line] = { recipe spell, ... }\nSP.MAYBE_TRAINER = {\n")

@@ -11,6 +11,7 @@ SP.version = (type(tocVersion) == "string" and not tocVersion:find("@")) and toc
 
 SP.defaults = {
 	target = 0,          -- 0 = the current skill cap (next trainer rank)
+	favorPlans = true,   -- plan the trade camps' plans when you have the Merchant's Favor
 	bagsFree = true,     -- materials you already have count as free
 	resale = "vendor",   -- count what you get back for what you craft: "off", "vendor" or "best" (vendor or Auction House)
 	netPick = false,     -- pick recipes by cost after selling (off: by what you pay now)
@@ -156,6 +157,32 @@ function SP.ProfLine(info, label)
 	return (label and (lastLine[label] or NAME_LINE[label])) or info.professionID
 end
 
+-- Seconds one craft takes (its cast time; 3 if the game doesn't say)
+local castCache = {}
+function SP.CastSeconds(recipeID)
+	if castCache[recipeID] then return castCache[recipeID] end
+	local t
+	if C_Spell and C_Spell.GetSpellInfo then
+		local ok, info = pcall(C_Spell.GetSpellInfo, recipeID)
+		if ok and type(info) == "table" and type(info.castTime) == "number" and info.castTime > 0 then t = info.castTime / 1000 end
+	end
+	if not t and GetSpellInfo then
+		local ok, _, _, _, cast = pcall(GetSpellInfo, recipeID)
+		if ok and type(cast) == "number" and cast > 0 then t = cast / 1000 end
+	end
+	t = t or 3
+	castCache[recipeID] = t
+	return t
+end
+
+-- "about 25 min", "about 1 h 10 min"
+function SP.Duration(seconds)
+	local m = math.max(1, math.floor(seconds / 60 + 0.5))
+	if m < 60 then return "about " .. m .. " min" end
+	local h, rest = math.floor(m / 60), m % 60
+	return "about " .. h .. " h" .. (rest > 0 and (" " .. rest .. " min") or "")
+end
+
 -- The open window's profession worked out from its recipes (most of them in
 -- one profession's data), with skill from GetProfessions
 function SP.ProfessionFromRecipes()
@@ -272,7 +299,7 @@ function SP.ScanCandidates(prof)
 		if okI and type(r) == "table" and not r.learned and not r.isSalvageRecipe
 			and not r.isRecraft and not r.isDummyRecipe then
 			local at, how = SP.LearnAt(recipeID, prof.id)
-			local cost, where, item
+			local cost, where, item, favor
 			if how == "trainer" then
 				cost = SP.TrainCost(recipeID, prof.id)
 			elseif how == "maybe" then
@@ -283,6 +310,7 @@ function SP.ScanCandidates(prof)
 				for _, src in ipairs(SP.RecipeSources(recipeID)) do
 					if src.kind == "bags" or src.kind == "alt" or src.kind == "vendor" or src.kind == "ah" then
 						how, cost, where, item = src.kind, src.price or 0, src.npc or src.alt, src.item
+						favor = src.kind == "vendor" and src.currency and src.amount or nil
 						at = src.skill or at
 						break
 					end
@@ -293,7 +321,7 @@ function SP.ScanCandidates(prof)
 					id = recipeID, name = r.name, icon = r.icon, gray = r.maxTrivialLevel,
 					ups = (r.numSkillUps and r.numSkillUps > 0) and r.numSkillUps or 1,
 					reagents = {}, unlearned = true, learn = at, trainCost = cost or 0,
-					how = how, where = where, recipeItem = item,
+					how = how, where = where, recipeItem = item, favor = favor,
 				}
 				ReadSchematic(recipe)
 				if #recipe.reagents > 0 then list[#list + 1] = recipe end
