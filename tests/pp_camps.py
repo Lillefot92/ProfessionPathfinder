@@ -17,7 +17,7 @@ C_Reputation = { GetFactionDataByID = function(id)
 	return { name = ({ [2587] = "Durotar Supply and Logistics", [2586] = "Azeroth Commerce Authority" })[id] or "Faction", reaction = (STANDING[id] or 3) + 1 }
 end }
 C_CurrencyInfo = { GetCurrencyInfo = function(id) if id == 3402 then return { name = "Merchant's Favor", quantity = FAVOR } end end }
-NAMES = { [1252326] = "Sentinel's Pauldrons", [1248752] = "Mystic Mushroom" }
+NAMES = { [1252311] = "Sentinel's Sabatons", [1248752] = "Mystic Mushroom" }
 C_Spell = { GetSpellName = function(id) return NAMES[id] or ("Recipe " .. id) end }
 ''')
 ns = lua.table()
@@ -31,41 +31,40 @@ E(SP.eventFrame, "ADDON_LOADED", "ProfessionPathfinder"); E(SP.eventFrame, "PLAY
 local function First(id) return SP.RecipeSources(id)[1] end
 assert(SP.db.favorPlans == true, "on by default")
 
--- Sentinel's Pauldrons: 60 Favor, Friendly with your trade company
-STANDING[2587], FAVOR = 3, 100
-local s = First(1252326)
+-- Sentinel's Sabatons: 90 Favor, Honored with your trade company
+STANDING[2587], FAVOR = 4, 100
+local s = First(1252311)
 assert(s.kind == "rep" and s.faction == 2587 and s.npc.name == "Gor'mak", s.kind)
 print(SP.SourceText(s))
-assert(SP.SourceText(s):find("Friendly with Durotar Supply and Logistics") and SP.SourceText(s):find("60 Merchant's Favor"))
+assert(SP.SourceText(s):find("Honored with Durotar Supply and Logistics") and SP.SourceText(s):find("90 Merchant's Favor"))
 
-STANDING[2587], FAVOR = 4, 20
-s = First(1252326)
-assert(s.kind == "favor", "Friendly but not enough Favor: " .. s.kind)
+STANDING[2587], FAVOR = 5, 20
+s = First(1252311)
+assert(s.kind == "favor", "Honored but not enough Favor: " .. s.kind)
 print(SP.SourceText(s))
 assert(SP.SourceText(s):find("you have 20") and SP.SourceText(s):find("Dokimi"))
 
-FAVOR = 60
-s = First(1252326)
-assert(s.kind == "vendor" and s.currency == 3402 and s.amount == 60, s.kind)
+FAVOR = 90
+s = First(1252311)
+assert(s.kind == "vendor" and s.currency == 3402 and s.amount == 90, s.kind)
 print(SP.SourceText(s))
-assert(SP.SourceText(s):find("for 60 Merchant's Favor") and SP.SourceText(s):find("The Barrens"))
+assert(SP.SourceText(s):find("for 90 Merchant's Favor") and SP.SourceText(s):find("The Barrens"))
 
 -- the option off: shown, not planned
 SP.db.favorPlans = false
-s = First(1252326)
+s = First(1252311)
 assert(s.kind == "favor" and SP.SourceText(s):find("turned off"), s.kind)
 SP.db.favorPlans = true
 
--- Mystic Mushroom (Enchanting): 45 Favor, no reputation
-FAVOR = 45
-assert(First(1248752).kind == "vendor" and First(1248752).npc.name == "Beneris")
+-- only plans that help leveling are in: Mystic Mushroom (Enchanting, 45 Favor) isn't
+assert(First(1248752) == nil, "Mystic Mushroom doesn't help leveling")
 
 -- Alliance: the Redridge camp and the Azeroth Commerce Authority
-FACTION = "Alliance"; STANDING[2586] = 4; FAVOR = 60
-s = First(1252326)
+FACTION = "Alliance"; STANDING[2586] = 5; FAVOR = 90
+s = First(1252311)
 assert(s.kind == "vendor" and s.npc.name == "Stondry Darkhammer", s.kind .. " " .. s.npc.name)
 FAVOR = 0
-s = First(1252326)
+s = First(1252311)
 assert(s.kind == "favor" and SP.SourceText(s):find("Marcy Baker"))
 FACTION = "Horde"
 
@@ -82,12 +81,22 @@ print(where)
 assert(where:find("Gor'mak") and where:find("60 Merchant's Favor"))
 
 -- ways past: a camp plan you can't afford yet is offered
-STANDING[2587], FAVOR = 4, 0
+STANDING[2587], FAVOR = 5, 0
 local found = false
-for _, f in ipairs(SP.WaysPast({ id = 164, name = "Blacksmithing" }, 215, 5)) do
+for _, f in ipairs(SP.WaysPast({ id = 164, name = "Blacksmithing" }, 235, 5)) do
 	print(SP.WayText(f))
 	if f.src.kind == "favor" or (f.src.kind == "rep" and f.src.currency) then found = true end
 end
 assert(found, "a trade camp plan among the ways past")
+-- the other new vendors: Mishta (Cenarion Circle), Mahu/Saenorion, Pexmit
+STANDING[609] = 5
+local m = First(1297121) -- Venomspew Cord
+assert(m.kind == "vendor" and m.npc.name == "Mishta" and m.price == 75000, m.kind)
+STANDING[609] = 3
+assert(First(1297121).kind == "rep")
+local k = First(1255096) -- Mystic Heavy Armor Kit
+assert(k.kind == "vendor" and k.npc.name == "Mahu", k.npc and k.npc.name)
+FACTION = "Alliance"; assert(First(1255096).npc.name == "Saenorion"); FACTION = "Horde"
+assert(First(1257487).npc.name == "Pexmit") -- Runecloth Cuffs
 print("camps ok")
 ''')

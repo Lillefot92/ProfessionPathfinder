@@ -89,6 +89,24 @@ EXTRA_PLANS = {
     275598: [15176], 275599: [15176], 275600: [15176],   # Goregasher Grips/Support/Stompers - Vargus
     275601: [15176], 275602: [15176], 275603: [15176],   # Clutchlord's Grips/Support/Stompers - Vargus
 }
+# Plans that are only added when they help leveling (tools/data/leveling_plans.txt,
+# made by tools/eval_plans.py): item = vendors
+EXTRA_CANDIDATES = {
+    252783: [3005, 4225], 252784: [3005, 4225],   # Mystic/Forceful Medium Armor Kit - Mahu, Saenorion
+    252811: [3005, 4225], 252812: [3005, 4225],   # Mystic/Forceful Heavy Armor Kit - Mahu, Saenorion
+    254124: [900001],                             # Pattern: Runecloth Cuffs - Pexmit, Mount Hyjal
+    275580: [15179], 275581: [15179], 275582: [15179],   # Venomspew Gloves/Cord/Footpads - Mishta, Cenarion Hold
+    275583: [15179], 275584: [15179], 275585: [15179],   # Swarmtender's Gloves/Cord/Footpads - Mishta
+}
+# PP_ALL_PLANS=1: every candidate and trade camp plan (to test which ones help)
+ALL_PLANS = os.environ.get("PP_ALL_PLANS") == "1"
+_here = os.path.dirname(os.path.abspath(__file__))
+LEVELING = set()
+for _l in open(os.path.join(_here, "data", "leveling_plans.txt"), encoding="utf-8"):
+    _l = _l.split("#", 1)[0].strip()
+    if _l: LEVELING.add(int(_l))
+def Wanted(item): return ALL_PLANS or item in LEVELING
+
 # NPCs QuestieDB doesn't have yet: id = { name, title, friendly to, area, map, x, y, zone }
 # (no x, y: they move between a few spots)
 EXTRA_NPCS = {
@@ -229,7 +247,9 @@ for sid, rows in recipes.items():
         if r and int(r["MinFactionID"] or 0) > 0:
             e["faction"], e["standing"] = int(r["MinFactionID"]), int(r["MinReputation"] or 0)
 if sparse:
-    for iid, vend in EXTRA_PLANS.items():
+    extra = dict(EXTRA_PLANS)
+    extra.update({i: v for i, v in EXTRA_CANDIDATES.items() if Wanted(i)})
+    for iid, vend in extra.items():
         r = sparse[iid]
         name = r["Display_lang"]
         line = {164: 164, 165: 165, 171: 171, 197: 197, 202: 202, 333: 333, 185: 185, 129: 129}.get(int(r["RequiredSkill"] or 0))
@@ -263,6 +283,7 @@ if sparse:
         iid = next((i for v in variants for p in PREFIX for i in by_item_name.get(p + v, [])), None)
         sids = next((by_name[(line, norm(v))] for v in variants if (line, norm(v)) in by_name), None)
         if not (iid and sids): continue
+        if not Wanted(iid): continue
         r = sparse[iid]
         for nid in CAMP_VENDORS[prof]: ref(nid)
         linked.update(sids)
