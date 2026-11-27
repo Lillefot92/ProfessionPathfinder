@@ -25,6 +25,11 @@ Download it on [CurseForge](https://www.curseforge.com/wow/addons/profession-pat
 - Fishing helper: one key to cast and loot, lure reminder, zone advice, catch log, and the fish your Cooking plan still needs.
 - Works in any game language.
 
+<p>
+<img src="docs/screenshot-tooltip.png" alt="A plan step's tooltip: what to gather or buy, and where to buy the recipe">
+<img src="docs/screenshot-options.png" width="420" alt="The options">
+</p>
+
 ## Commands
 
 | Command | What it does |
