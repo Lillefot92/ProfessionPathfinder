@@ -370,6 +370,7 @@ function SP.MakePlan(prof, recipes, db, others, candidates)
 				if best.unlearned and not taught[best] then
 					taught[best] = true
 					step.learn, step.learnAt, step.trainCost, step.source = true, best.learn, best.trainCost, best.how or "trainer"
+					step.checked = best.checked
 					step.where, step.item = best.where, best.recipeItem
 					plan.trainCost = plan.trainCost + (best.trainCost or 0)
 				end

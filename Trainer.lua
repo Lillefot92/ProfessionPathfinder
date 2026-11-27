@@ -198,6 +198,19 @@ function SP.LearnAt(id, line)
 	if d then return d[3] == 1 and 1 or d[1], d[3] == 1 and "start" or "yellow" end
 end
 
+-- Trainer guesses that wow.gg's Forever lists confirm (Sources.lua)
+local checkedIndex
+function SP.TrainerChecked(id, line)
+	if not checkedIndex then
+		checkedIndex = {}
+		for l, list in pairs(SP.TRAINER_CHECKED or {}) do
+			checkedIndex[l] = {}
+			for _, sid in ipairs(list) do checkedIndex[l][sid] = true end
+		end
+	end
+	return checkedIndex[line] and checkedIndex[line][id] or false
+end
+
 -- Recipes that are probably taught by a trainer (Sources.lua)
 local maybeIndex
 function SP.MaybeTrainer(id, line)

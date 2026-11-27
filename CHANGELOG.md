@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.1
+
+Fewer wrong trips to the trainer.
+
+- When the addon doesn't know where a recipe comes from, it guesses "probably taught by a trainer". Every guess has been checked against wow.gg's WoW Forever recipe lists. 436 are confirmed and now read "a trainer teaches it" without the "probably"
+- Recipes that really come from a drop, a quest or a vendor are no longer sent to the trainer. Examples: Troll's Blood Elixir (a rare drop in Arathi Highlands), Mithril Plate Bracers and Shoulders, the Timbermaw patterns, Major Healing Potion and Festival Suit
+- Recipe items whose names differ from the recipe are now linked, so their vendors show up and can be planned. Examples: "Recipe: Mithril Head Trout" for Mithril Headed Trout, "Recipe: Elixir of Ogre's Strength" and "Recipe: Elixir of Superior Defense" for Elixir of Greater Defense
+- Gordok Ogre Suit and Goldthorn Tea are taught by NPCs out in the world (in Dire Maul and Razorfen Downs), so they're no longer planned as trainer recipes
+
 ## 1.3.0
 
 Finishing your profession, and one set of saved data per character.

@@ -322,6 +322,7 @@ function SP.ScanCandidates(prof)
 					ups = (r.numSkillUps and r.numSkillUps > 0) and r.numSkillUps or 1,
 					reagents = {}, unlearned = true, learn = at, trainCost = cost or 0,
 					how = how, where = where, recipeItem = item, favor = favor,
+					checked = how == "maybe" and SP.TrainerChecked(recipeID, prof.id) or nil,
 				}
 				ReadSchematic(recipe)
 				if #recipe.reagents > 0 then list[#list + 1] = recipe end

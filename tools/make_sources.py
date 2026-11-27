@@ -206,6 +206,16 @@ for line, rec in DATA.items():
         n = spell_name.get(sid)
         if n: by_name.setdefault((line, norm(n)), []).append(sid)
 
+# Where recipes are learned, from wow.gg's Forever lists (tools/fetch_wowgg.py):
+# checks the trainer guesses, and links items whose names differ from the recipe
+GG = {}
+GG_ITEM = {}
+for _l in open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "forever_recipe_sources.txt"), encoding="utf-8"):
+    if _l.startswith("#") or not _l.strip(): continue
+    _p = _l.rstrip("\n").split(" ", 3)
+    GG[(int(_p[0]), int(_p[1]))] = _p[2]
+    if _p[2] == "item": GG_ITEM.setdefault((int(_p[0]), norm(_p[3])), []).append(int(_p[1]))
+
 recipes, unmatched, recipe_ids, linked = {}, [], [], set()
 for iid, r in item.items():
     if r.get(12) != 9 or r.get(13) not in SUB_LINE: continue
@@ -216,6 +226,8 @@ for iid, r in item.items():
     sids = by_name.get((line, norm(bare))) or by_name.get((line, norm(name)))
     if not sids:  # "Ornate Mithril Shoulder" teaches "Ornate Mithril Shoulders"
         sids = by_name.get((line, norm(bare) + "s")) or by_name.get((line, norm(bare).rstrip("s")))
+    if not sids:  # renamed: "Recipe: Mithril Head Trout" teaches "Mithril Headed Trout" (wow.gg)
+        sids = GG_ITEM.get((line, norm(name)))
     if sids: linked.update(sids)  # taught by an item (even a retired one): not a trainer recipe
     if name.startswith("Deprecated"): continue
     recipe_ids.append(iid)
@@ -303,10 +315,21 @@ if sparse:
 # or it's an older enchant-style recipe that makes no item)
 outputs = {int(k): int(v) for k, v in ex["outputs"].items()} if ex["outputs"] else {}
 START = {int(line): {int(sp) for sp, d in rec.items() if d[3] == 1} for line, rec in L.globals().SP.DATA.items()}
-maybe = {}
+# Taught by an NPC out in the world, with no item and no trainer (wow.gg lists
+# them like trainer recipes)
+NPC_TAUGHT = {
+    22813: "Knot Thimblejack, Dire Maul (after The Gordok Ogre Suit)",  # Gordok Ogre Suit, Tailoring
+    22815: "Knot Thimblejack, Dire Maul (after The Gordok Ogre Suit)",  # Gordok Ogre Suit, Leatherworking
+    13028: "Henry Stern, Razorfen Downs",  # Goldthorn Tea
+}
+maybe, checked, gg_not_trainer = {}, {}, 0
 for line, rec in DATA.items():
     for sid in rec:
         if sid in linked or sid in START.get(line, ()) or sid not in spell_name: continue
+        if sid in NPC_TAUGHT: continue  # taught by an NPC out in the world, not a trainer
+        if GG.get((line, sid)) == "item":  # an item teaches it (a drop, quest or vendor): not a trainer
+            gg_not_trainer += 1
+            continue
         out = outputs.get(sid)
         # WoW Forever's own new recipes (spell IDs above 1,000,000) are left
         # out: many come from other sources, and trainer windows add the
@@ -314,6 +337,9 @@ for line, rec in DATA.items():
         # Discovery, 400000s).
         if (out and out in item) or (not out and sid < 100000):
             maybe.setdefault(line, []).append(sid)
+            if GG.get((line, sid)) == "trainer": checked.setdefault(line, []).append(sid)
+print("trainer guesses:", sum(len(v) for v in maybe.values()), "confirmed by wow.gg:", sum(len(v) for v in checked.values()),
+      "not trainer recipes (an item teaches them):", gg_not_trainer)
 
 # rank books and quests: resolve their NPCs now, so they're in SP.NPCS
 special_rows = {}
@@ -415,6 +441,12 @@ with open(OUT, "w", encoding="utf-8", newline="\n") as f:
     for line in sorted(maybe):
         f.write("\t[%d] = {" % line)
         for i, sid in enumerate(sorted(maybe[line])):
+            f.write(("\n\t\t" if i % 14 == 0 else " ") + "%d," % sid)
+        f.write("\n\t},\n")
+    f.write("}\n\n-- Trainer guesses confirmed by wow.gg's Forever lists: [skill line] = { recipe spell, ... }\nSP.TRAINER_CHECKED = {\n")
+    for line in sorted(checked):
+        f.write("\t[%d] = {" % line)
+        for i, sid in enumerate(sorted(checked[line])):
             f.write(("\n\t\t" if i % 14 == 0 else " ") + "%d," % sid)
         f.write("\n\t},\n")
     f.write("}\n\n-- Every recipe item (for /ppf export)\nSP.RECIPE_ITEM_IDS = {")

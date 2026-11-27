@@ -64,6 +64,10 @@ local function LearnTip(e, where)
 	if how == "alt" then return "Not learned yet: " .. where .. ". Use it at skill " .. at .. "." end
 	if how == "vendor" then return "Not learned yet: buy " .. where .. (cost and (" (about " .. cost .. ")") or "") .. ". Learn it at skill " .. at .. "." end
 	if how == "ah" then return "Not learned yet: buy it at " .. where .. (cost and (" (about " .. cost .. ")") or "") .. ". Learn it at skill " .. at .. "." end
+	if how == "maybe" and (e.checked or (e.recipe and e.recipe.checked)) then
+		return "Not learned yet: a trainer teaches it from about skill " .. at .. (cost and (" (about " .. cost .. ")") or "")
+			.. ". Nearest: " .. where .. "."
+	end
 	if how == "maybe" then
 		return "Not learned yet: probably taught by a trainer from about skill " .. at .. (cost and (" (about " .. cost .. ")") or "")
 			.. ". No trainer window has shown it yet: open your trainer's window to check. Nearest: " .. where .. "."
@@ -81,11 +85,11 @@ local function ShortZone(z)
 	return first
 end
 
-local function LearnTag(source)
+local function LearnTag(source, checked)
 	if source == "vendor" or source == "ah" then return "(buy recipe)" end
 	if source == "bags" then return "(recipe in bags)" end
 	if source == "alt" then return "(recipe on alt)" end
-	if source == "maybe" then return "(learn?)" end
+	if source == "maybe" and not checked then return "(learn?)" end
 	return "(learn)"
 end
 
@@ -387,7 +391,7 @@ function UI:Show(prof, plan, loading)
 		row.icon:SetTexture(r.icon or "Interface\\Icons\\INV_Misc_QuestionMark")
 		local name
 		if step.learn then
-			name = "|cffffffff" .. (r.name or "?") .. "|r |cffff8040" .. LearnTag(step.source) .. "|r"
+			name = "|cffffffff" .. (r.name or "?") .. "|r |cffff8040" .. LearnTag(step.source, step.checked) .. "|r"
 		else
 			name = "|cff" .. (DIFF_COLOR[r.diff] or "ffffff") .. (r.name or "?") .. "|r"
 		end
@@ -463,7 +467,7 @@ function UI:Show(prof, plan, loading)
 		local r = prep.recipe
 		row.recipeID = (not r.foreign and not prep.learn) and r.id or nil
 		row.icon:SetTexture(r.icon)
-		row.text:SetText(string.format("~%dx |cffcccccc%s|r", prep.crafts, r.name or "?") .. (prep.learn and (" |cffff8040" .. LearnTag(prep.source) .. "|r") or ""))
+		row.text:SetText(string.format("~%dx |cffcccccc%s|r", prep.crafts, r.name or "?") .. (prep.learn and (" |cffff8040" .. LearnTag(prep.source, prep.recipe and prep.recipe.checked) .. "|r") or ""))
 		row.right:SetText("|cff999999" .. (r.foreign and r.profession or prof.label or prof.name) .. "|r")
 		local learnText
 		if prep.learn then
@@ -582,7 +586,7 @@ function UI:Show(prof, plan, loading)
 		local where = SP.LearnWhere(prof, nextLearn)
 		local at = nextLearn.learnAt or nextLearn.from
 		notes[#notes + 1] = "Next to learn: |cffffffff" .. nextLearn.recipe.name .. "|r at skill " .. at .. ", from " .. where
-			.. (nextLearn.source == "maybe" and " (probably: not seen at a trainer yet)" or "")
+			.. (nextLearn.source == "maybe" and not (nextLearn.checked or nextLearn.recipe.checked) and " (probably: not seen at a trainer yet)" or "")
 			.. ((nextLearn.trainCost or 0) > 0 and (" (" .. SP.Money(nextLearn.trainCost) .. ")") or "") .. "."
 	end
 	if plan.trainerAt then
