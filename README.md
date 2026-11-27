@@ -84,4 +84,4 @@ Pushing a `v*` tag builds a release with the BigWigs packager.
 
 GPL-3.0-or-later, see [LICENSE](LICENSE). `Sources.lua` is built from QuestieDB (GPL-3.0), thanks to the Questie team.
 
-Made by Krigar Kossan.
+Made by Lillefot.

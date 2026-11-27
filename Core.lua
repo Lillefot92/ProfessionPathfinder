@@ -516,8 +516,8 @@ end
 -- whole account, updated whenever you log in or open a profession).
 ---------------------------------------------------------------------------
 -- Which character this is. On Forever, UnitFullName gives the part after the
--- hyphen in the character's name ("Krigar" + "Kossan", like the WTF folder
--- Krigar-Kossan), every time. GetRealmName is unreliable there: sometimes the
+-- hyphen in the character's name ("Brakka" + "Ironhide", like the WTF folder
+-- Brakka-Ironhide), every time. GetRealmName is unreliable there: sometimes the
 -- server's name, sometimes that same part, sometimes empty. So the key is
 -- name + that part, and older entries saved under a server name (it has
 -- spaces) or an empty one move to it.

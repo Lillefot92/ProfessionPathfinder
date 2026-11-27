@@ -8,7 +8,7 @@ lua = LuaRuntime(unpack_returned_tuples=True)
 lua.execute(open(os.path.join(HERE, "sp_harness.lua")).read())
 lua.execute(r'''
 function GetTime() return 0 end tinsert = table.insert; UISpecialFrames = {}
-function UnitName() return "Krigar", "Kossan" end function UnitFullName() return "Krigar", "Kossan" end
+function UnitName() return "Brakka", "Ironhide" end function UnitFullName() return "Brakka", "Ironhide" end
 function UnitFactionGroup() return "Horde" end
 STANDING = {}
 C_Reputation = { GetFactionDataByID = function(id) return { name = ({ [609] = "Cenarion Circle", [529] = "Argent Dawn" })[id] or "Faction", reaction = (STANDING[id] or 3) + 1 } end }
@@ -54,7 +54,7 @@ assert(m.kind == "rep" and SP.SourceText(m):find("Spectral Essence"))
 -- a plan on another character (Syndicator): mail it over. Thorium Boots plans drop (bind on equip)
 Syndicator = { API = { GetInventoryInfoByItemID = function(item)
 	if item == 12693 then
-		return { characters = { { character = "Krigar", bags = 0 }, { character = "Mega", bags = 0, bank = 1 } } }
+		return { characters = { { character = "Brakka", bags = 0 }, { character = "Banky", bags = 0, bank = 1 } } }
 	end
 	return { characters = {} }
 end } }
@@ -65,8 +65,8 @@ for sid, rows in pairs(SP.RECIPE_ITEMS) do for _, e in ipairs(rows) do if e == b
 assert(bootsSpell, "a dropped plan to test with")
 local a = SP.RecipeSources(bootsSpell)[1]
 print(SP.SourceText(a))
-assert(a.kind == "alt" and a.alt.name == "Mega" and a.alt.spot == "bank")
-assert(SP.LearnWhere({ name = "Blacksmithing" }, { source = "alt", item = boots[1], where = a.alt }):find("on Mega %(bank%): mail it"))
+assert(a.kind == "alt" and a.alt.name == "Banky" and a.alt.spot == "bank")
+assert(SP.LearnWhere({ name = "Blacksmithing" }, { source = "alt", item = boots[1], where = a.alt }):find("on Banky %(bank%): mail it"))
 Syndicator = nil
 
 -- stuck at 286 with no reputation: the ways past it

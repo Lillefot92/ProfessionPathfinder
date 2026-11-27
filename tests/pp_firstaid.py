@@ -9,7 +9,7 @@ lua = LuaRuntime(unpack_returned_tuples=True)
 lua.execute(open(os.path.join(HERE, "sp_harness.lua")).read())
 lua.execute(r'''
 function GetTime() return 0 end tinsert = table.insert; UISpecialFrames = {}
-function UnitName() return "Krigar", "Kossan" end function UnitFullName() return "Krigar", "Kossan" end
+function UnitName() return "Brakka", "Ironhide" end function UnitFullName() return "Brakka", "Ironhide" end
 ''')
 ns = lua.table()
 loader = lua.eval("function(src, name, ns) local f = assert(load(src, '@'..name)); return f('ProfessionPathfinder', ns) end")

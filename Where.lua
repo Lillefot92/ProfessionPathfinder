@@ -253,7 +253,7 @@ function SP.StandingName(standing)
 end
 
 -- Your other characters that hold an item, from Syndicator (if you use it):
--- { { name = "Mega", spot = "bank" }, ... }
+-- { { name = "Banky", spot = "bank" }, ... }
 function SP.AltsWith(itemID)
 	local api = Syndicator and Syndicator.API and Syndicator.API.GetInventoryInfoByItemID
 	if not api then return {} end
