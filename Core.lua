@@ -156,6 +156,38 @@ function SP.ProfLine(info, label)
 	return (label and (lastLine[label] or NAME_LINE[label])) or info.professionID
 end
 
+-- The open window's profession worked out from its recipes (most of them in
+-- one profession's data), with skill from GetProfessions
+function SP.ProfessionFromRecipes()
+	local T = C_TradeSkillUI
+	if not (T and T.GetAllRecipeIDs and SP.DATA) then return end
+	local ok, ids = pcall(T.GetAllRecipeIDs)
+	if not ok or type(ids) ~= "table" or #ids == 0 then return end
+	local count, best, most = {}, nil, 0
+	for _, id in ipairs(ids) do
+		for line, data in pairs(SP.DATA) do
+			if data[id] then
+				count[line] = (count[line] or 0) + 1
+				if count[line] > most then best, most = line, count[line] end
+			end
+		end
+	end
+	if not best or most * 2 < #ids then return end
+	if not (GetProfessions and GetProfessionInfo) then return end
+	local t = { pcall(GetProfessions) }
+	if not t[1] then return end
+	for i = 2, 7 do
+		local idx = t[i]
+		if idx then
+			local okI, name, _, skill, max, _, _, line = pcall(GetProfessionInfo, idx)
+			if okI and line == best and type(skill) == "number" and (max or 0) > 0 then
+				lastLine[name] = best
+				return { name = SP.ProfKey(best, name), label = name, id = best, skill = skill, max = max, fallback = true }
+			end
+		end
+	end
+end
+
 -- The profession currently open: key (English), label (as the game calls
 -- it), skill, max skill.
 function SP.ProfessionInfo()
@@ -169,6 +201,14 @@ function SP.ProfessionInfo()
 	if (not info or not info.maxSkillLevel or info.maxSkillLevel == 0) and T.GetBaseProfessionInfo then
 		local ok, i = pcall(T.GetBaseProfessionInfo)
 		if ok and type(i) == "table" and i.skillLevel then info = i end
+	end
+	-- Right after the window opens the game can give an empty profession
+	-- (no name, 0/0). Then: which profession its recipes belong to, and the
+	-- skill from your character's profession list.
+	local empty = not info or ((info.maxSkillLevel or 0) == 0 and (info.professionName or "") == "")
+	if empty then
+		local fb = SP.ProfessionFromRecipes()
+		if fb then return fb end
 	end
 	if not info then return end
 	local label = info.professionName or info.parentProfessionName or "Profession"

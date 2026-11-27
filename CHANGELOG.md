@@ -9,6 +9,7 @@ Finishing your profession, and one set of saved data per character.
 - When a plan does stop early, the window names the best ways past that point: reputation plans, quests and common drops, instead of only "visit your trainer"
 - Plans on your other characters count too, if you use Syndicator: "Mega has Plans: Thorium Boots (bank): mail it to this character"
 - Magnus Frostwake's plans explain that you need the Spectral Essence from the Scholomance quest chain to see him
+- Right after a profession window opens, the game can give an empty profession (no name, 0/0), which left the window without a plan. The addon now works out the profession from the window's recipes and takes your skill from your character's profession list
 - Each character now keeps one set of saved data. On Forever the game sometimes gives the server's name as your realm, sometimes the second part of your character's name ("Kossan" in Krigar-Kossan) and sometimes nothing, so a character could end up saved twice (and an alt could show up twice in gather & craft mode). The character is now always known by that second part, which never changes, and what was saved under the server's name moves there when you log in on that character.
 
 ## 1.2.2

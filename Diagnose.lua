@@ -79,6 +79,7 @@ function SP.Diagnose()
 	end
 	out[#out + 1] = "Profession: " .. tostring(prof.name) .. " " .. prof.skill .. "/" .. prof.max
 		.. " (id " .. tostring(prof.id) .. ", skill line " .. tostring(prof.enum) .. ")"
+		.. (prof.fallback and "  [the window gave no profession: worked out from its recipes]" or "")
 	if SP.MySpecs and SP.SPECS then
 		local have = {}
 		for spec in pairs(SP.MySpecs()) do have[#have + 1] = SP.SPECS[spec] and SP.SPECS[spec][1] or tostring(spec) end
