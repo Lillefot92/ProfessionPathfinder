@@ -1,7 +1,14 @@
 # Changelog
 
-## 1.2.3
+## 1.3.0
 
+Finishing your profession, and one set of saved data per character.
+
+- Blacksmithing now reaches 300. WoW Forever's own end-game plans are in: Bold Dirk from Pexmit (Dae'gun, Mount Hyjal) and the Goregasher and Clutchlord's plans from Vargus (Cenarion Hold, Silithus). Before, plans stopped around 286
+- Plans that need reputation (Vargus, the Argent Dawn and Thorium Brotherhood quartermasters) are planned once you have the reputation. Until then the tooltip says what's needed and where you stand, like "at Friendly with Cenarion Circle (you're Neutral)"
+- When a plan does stop early, the window names the best ways past that point: reputation plans, quests and common drops, instead of only "visit your trainer"
+- Plans on your other characters count too, if you use Syndicator: "Mega has Plans: Thorium Boots (bank): mail it to this character"
+- Magnus Frostwake's plans explain that you need the Spectral Essence from the Scholomance quest chain to see him
 - Each character now keeps one set of saved data. On Forever the game sometimes gives the server's name as your realm, sometimes the second part of your character's name ("Kossan" in Krigar-Kossan) and sometimes nothing, so a character could end up saved twice (and an alt could show up twice in gather & craft mode). The character is now always known by that second part, which never changes, and what was saved under the server's name moves there when you log in on that character.
 
 ## 1.2.2

@@ -78,6 +78,22 @@ REP_VENDORS = {"Meilosh", "Aendel Windspear", "Vargus", "Mishta", "Rin'wosho the
                "Argent Quartermaster Hasana", "Argent Quartermaster Lightspark", "Quartermaster Miranda Breechlock",
                "Lokhtos Darkbargainer"}
 EVENT_TITLES = {"Smokywood Pastures"}
+# Why a restricted vendor is restricted, when it isn't reputation
+VENDOR_NOTES = {"Magnus Frostwake": "only visible while you wear the Spectral Essence from the Scholomance quest chain"}
+
+# WoW Forever's own new plans that QuestieDB doesn't have yet: [plan item] = vendors.
+# Skill, price, binding and reputation come from the game's item table.
+# Checked Nov 27 2026 (Wowhead Forever, wow-professions.com).
+EXTRA_PLANS = {
+    251468: [900001],                     # Plans: Bold Dirk - Pexmit, Mount Hyjal
+    275598: [15176], 275599: [15176], 275600: [15176],   # Goregasher Grips/Support/Stompers - Vargus
+    275601: [15176], 275602: [15176], 275603: [15176],   # Clutchlord's Grips/Support/Stompers - Vargus
+}
+# NPCs QuestieDB doesn't have yet: id = { name, title, friendly to, area, map, x, y, zone }
+# (no x, y: they move between a few spots)
+EXTRA_NPCS = {
+    900001: ("Pexmit", "", "AH", 0, 2482, None, None, "Dae'gun, Mount Hyjal"),
+}
 def flag(nid):
     r = npc[nid]
     if r.get(1) in REP_VENDORS: return "rep"
@@ -86,6 +102,9 @@ def flag(nid):
 
 used = {}
 def ref(nid):
+    if nid in EXTRA_NPCS:
+        used[nid] = EXTRA_NPCS[nid]
+        return nid
     w = where(nid)
     if not w: return None
     r = npc[nid]
@@ -174,6 +193,36 @@ for iid, r in item.items():
         e.append(dict(item=iid, line=line, vendors=vend, drops=drops, drops5=[d for d in drops[:5] if ref(d)], objs=len(objs), quests=quests,
                       skill=int(skill) if skill else None, price=int(sell) * 4 if sell else None, bop=bool(bop)))
 
+# The game's item table: reputation needed to buy a plan, and Forever's new plans
+sparse = {}
+if ITEMSPARSE:
+    import csv
+    for row in csv.DictReader(open(ITEMSPARSE, encoding="utf-8")):
+        sparse[int(row["ID"])] = row
+for sid, rows in recipes.items():
+    for e in rows:
+        r = sparse.get(e["item"])
+        if r and int(r["MinFactionID"] or 0) > 0:
+            e["faction"], e["standing"] = int(r["MinFactionID"]), int(r["MinReputation"] or 0)
+if sparse:
+    for iid, vend in EXTRA_PLANS.items():
+        r = sparse[iid]
+        name = r["Display_lang"]
+        line = {164: 164, 165: 165, 171: 171, 197: 197, 202: 202, 333: 333, 185: 185, 129: 129}.get(int(r["RequiredSkill"] or 0))
+        bare = name.split(":", 1)[1]
+        sids = by_name.get((line, norm(bare)))
+        assert sids, name
+        linked.update(sids)
+        for nid in vend: ref(nid)
+        for sid in sids:
+            if any(e["item"] == iid for e in recipes.get(sid, [])): continue
+            e = dict(item=iid, line=line, vendors=vend, drops=[], drops5=[], objs=0, quests=[],
+                     skill=int(r["RequiredSkillRank"] or 0) or None, price=int(r["BuyPrice"] or 0) or None, bop=r["Bonding"] == "1")
+            if int(r["MinFactionID"] or 0) > 0:
+                e["faction"], e["standing"] = int(r["MinFactionID"]), int(r["MinReputation"] or 0)
+            recipes.setdefault(sid, []).append(e)
+            recipe_ids.append(iid)
+
 # Probably taught by a trainer: not learned with the profession, no item
 # teaches it, and it belongs to this game (it makes an item WoW Forever has,
 # or it's an older enchant-style recipe that makes no item)
@@ -229,10 +278,9 @@ for sp, sids in SPEC_TRAINER_RECIPES.items():
     for sid in sids:
         assert any(sid in rec for rec in DATA.values()), sid
         spec_recipes[sid] = sp
-if ITEMSPARSE:
-    import csv
+if sparse:
     spec_of = {s[0] for s in SPECS}
-    for row in csv.DictReader(open(ITEMSPARSE, encoding="utf-8")):
+    for row in sparse.values():
         sp = int(row["RequiredAbility"] or 0)
         if sp not in spec_of: continue
         iid = int(row["ID"])
@@ -251,12 +299,16 @@ with open(OUT, "w", encoding="utf-8", newline="\n") as f:
     f.write("-- (GPL-3.0, https://github.com/Questie/QuestieDB). Do not edit by hand.\n\n")
     f.write("local ADDON, SP = ...\n\n")
     f.write("-- [npc ID] = { name, title, friendly to (A/H/AH), area ID, map ID, x, y, zone (English),\n")
-    f.write("--   \"rep\" (sells to players with reputation) or \"event\" (only during a holiday) }\n")
+    f.write("--   \"rep\" (sells only to some players) or \"event\" (only during a holiday), why it's restricted }\n")
     f.write("SP.NPCS = {\n")
     for nid in sorted(used):
         n, sub, fac, area, umap, x, y, zone = used[nid]
-        fl = flag(nid)
-        f.write("\t[%d]={%s,%s,%s,%d,%d,%s,%s,%s%s},\n" % (nid, q(n), q(sub or ""), q(fac), area, umap, x, y, q(zone), ("," + q(fl)) if fl else ""))
+        fl = flag(nid) if nid not in EXTRA_NPCS else None
+        note = VENDOR_NOTES.get(n)
+        tail = ("," + (q(fl) if fl else "nil")) if (fl or note) else ""
+        if note: tail += "," + q(note)
+        f.write("\t[%d]={%s,%s,%s,%d,%d,%s,%s,%s%s},\n" % (nid, q(n), q(sub or ""), q(fac), area, umap,
+            "nil" if x is None else x, "nil" if y is None else y, q(zone), tail))
     f.write("}\n\n-- Trainers: [profession] = { {npc ID, highest skill cap they teach}, ... }\nSP.TRAINERS = {\n")
     for prof in sorted(trainers):
         f.write("\t[%s] = {" % q(prof) + ", ".join("{%d,%d}" % t for t in sorted(trainers[prof])) + "},\n")
@@ -271,12 +323,15 @@ with open(OUT, "w", encoding="utf-8", newline="\n") as f:
                 f.write("\t\t%s = { quests = { %s } },\n" % (rank, parts))
         f.write("\t},\n")
     f.write("}\n\n-- Recipes from items: [recipe spell] = { {item, skill to learn, vendor price, bind on pickup,\n")
-    f.write("--   vendors, NPCs that drop it (up to 5), number of NPCs that drop it, objects, quests}, ... }\nSP.RECIPE_ITEMS = {\n")
+    f.write("--   vendors, NPCs that drop it (up to 5), number of NPCs that drop it, objects, quests,\n")
+    f.write("--   reputation faction needed to buy it, standing (0 Hated .. 3 Neutral, 4 Friendly, 5 Honored, 6 Revered, 7 Exalted)}, ... }\nSP.RECIPE_ITEMS = {\n")
     for sid in sorted(recipes):
         rows = []
         for e in recipes[sid]:
-            rows.append("{%d,%s,%s,%s,%s,%s,%d,%d,%s}" % (e["item"], e["skill"] or "nil", e["price"] or "nil", "true" if e["bop"] else "false",
-                ids([v for v in e["vendors"]]), ids(e["drops5"]), len(e["drops"]), e["objs"], ids(e["quests"])))
+            row = "{%d,%s,%s,%s,%s,%s,%d,%d,%s" % (e["item"], e["skill"] or "nil", e["price"] or "nil", "true" if e["bop"] else "false",
+                ids([v for v in e["vendors"]]), ids(e["drops5"]), len(e["drops"]), e["objs"], ids(e["quests"]))
+            if e.get("faction"): row += ",%d,%d" % (e["faction"], e["standing"])
+            rows.append(row + "}")
         f.write("\t[%d]={%s},\n" % (sid, ",".join(rows)))
     f.write("}\n\n-- Recipes probably taught by a trainer (no item teaches them): [skill line] = { recipe spell, ... }\nSP.MAYBE_TRAINER = {\n")
     for line in sorted(maybe):

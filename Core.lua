@@ -241,14 +241,14 @@ function SP.ScanCandidates(prof)
 				-- no trainer teaches it: a recipe in your bags, from a vendor
 				-- or from the Auction House (drops and quests aren't planned)
 				for _, src in ipairs(SP.RecipeSources(recipeID)) do
-					if src.kind == "bags" or src.kind == "vendor" or src.kind == "ah" then
-						how, cost, where, item = src.kind, src.price or 0, src.npc, src.item
+					if src.kind == "bags" or src.kind == "alt" or src.kind == "vendor" or src.kind == "ah" then
+						how, cost, where, item = src.kind, src.price or 0, src.npc or src.alt, src.item
 						at = src.skill or at
 						break
 					end
 				end
 			end
-			if at and (how == "trainer" or how == "maybe" or how == "bags" or how == "vendor" or how == "ah") then
+			if at and (how == "trainer" or how == "maybe" or how == "bags" or how == "alt" or how == "vendor" or how == "ah") then
 				local recipe = {
 					id = recipeID, name = r.name, icon = r.icon, gray = r.maxTrivialLevel,
 					ups = (r.numSkillUps and r.numSkillUps > 0) and r.numSkillUps or 1,

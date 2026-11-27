@@ -61,6 +61,7 @@ local function LearnTip(e, where)
 	local cost = (e.trainCost or 0) > 0 and SP.Money(e.trainCost) or nil
 	local how = e.source or "trainer"
 	if how == "bags" then return "Not learned yet: you have the recipe in your bags. Use it at skill " .. at .. "." end
+	if how == "alt" then return "Not learned yet: " .. where .. ". Use it at skill " .. at .. "." end
 	if how == "vendor" then return "Not learned yet: buy " .. where .. (cost and (" (about " .. cost .. ")") or "") .. ". Learn it at skill " .. at .. "." end
 	if how == "ah" then return "Not learned yet: buy it at " .. where .. (cost and (" (about " .. cost .. ")") or "") .. ". Learn it at skill " .. at .. "." end
 	if how == "maybe" then
@@ -83,6 +84,7 @@ end
 local function LearnTag(source)
 	if source == "vendor" or source == "ah" then return "(buy recipe)" end
 	if source == "bags" then return "(recipe in bags)" end
+	if source == "alt" then return "(recipe on alt)" end
 	if source == "maybe" then return "(learn?)" end
 	return "(learn)"
 end
@@ -576,7 +578,14 @@ function UI:Show(prof, plan, loading)
 	elseif plan.selfStuck then
 		notes[#notes + 1] = "From " .. plan.stuckAt .. " no recipe can be made from what you gather and what vendors sell. Gather & craft mode works for professions that use ore, herbs, leather or cloth (turn it off in /ppf options or with /ppf gather)."
 	elseif plan.stuckAt then
-		notes[#notes + 1] = "From " .. plan.stuckAt .. " no recipe you know, or that a trainer is known to teach, gives skill. Visit your trainer (and reopen this window), or look for recipes from vendors and drops."
+		local ways = SP.WaysPast and SP.WaysPast(prof, plan.stuckAt, 3) or {}
+		if #ways > 0 then
+			local list = {}
+			for _, w in ipairs(ways) do list[#list + 1] = SP.WayText(w) end
+			notes[#notes + 1] = "From " .. plan.stuckAt .. " you need plans the addon can't count on. Ways past it: " .. table.concat(list, "; ") .. "."
+		else
+			notes[#notes + 1] = "From " .. plan.stuckAt .. " no recipe you know, or that a trainer is known to teach, gives skill. Visit your trainer (and reopen this window), or look for recipes from vendors and drops."
+		end
 	elseif #plan.steps > 0 then
 		notes[#notes + 1] = "Built from the game's own recipe data. Open a trainer's window now and then: the recipes it lists are added to the plan."
 	end

@@ -20,8 +20,9 @@ function SP.Npc(id)
 		local ok, z = pcall(C_Map.GetAreaInfo, n[4])
 		if ok and type(z) == "string" and z ~= "" then zone = z end
 	end
+	if not n[6] then zone = n[8] end -- no fixed spot: keep the more exact place name
 	return { id = id, name = n[1], title = n[2] ~= "" and n[2] or nil, faction = n[3], area = n[4], map = n[5],
-		x = n[6], y = n[7], zone = zone, rep = n[9] == "rep", event = n[9] == "event" }
+		x = n[6], y = n[7], zone = zone, rep = n[9] == "rep", event = n[9] == "event", note = n[10] }
 end
 
 function SP.Friendly(npc)
@@ -32,7 +33,8 @@ end
 -- "Orgrimmar 82.3, 23.0"
 function SP.NpcPlace(npc)
 	if not npc then return "" end
-	return string.format("%s %.1f, %.1f", npc.zone or "?", npc.x or 0, npc.y or 0)
+	if not npc.x then return npc.zone or "?" end
+	return string.format("%s %.1f, %.1f", npc.zone or "?", npc.x, npc.y or 0)
 end
 
 -- Your position in world coordinates: continent, x, y
@@ -66,7 +68,7 @@ function SP.SortByDistance(ids)
 		local npc = SP.Npc(id)
 		if npc and SP.Friendly(npc) then
 			npc.dist = math.huge
-			if cont then
+			if cont and npc.x then
 				local c, x, y = WorldPos(npc.map, npc.x / 100, npc.y / 100)
 				if c == cont then npc.dist = math.sqrt((x - mx) ^ 2 + (y - my) ^ 2) end
 			end
@@ -85,6 +87,10 @@ end
 function SP.Pin(npc)
 	if not npc then return end
 	local title = npc.name .. (npc.title and (" <" .. npc.title .. ">") or "")
+	if not npc.x then
+		print("|cff66bbffProfession Pathfinder:|r " .. title .. ", " .. SP.NpcPlace(npc) .. " (moves between a few spots, so there's no pin).")
+		return
+	end
 	local done = false
 	if C_Map and C_Map.SetUserWaypoint and UiMapPoint and UiMapPoint.CreateFromCoordinates then
 		local ok = pcall(function()
@@ -177,6 +183,60 @@ end
 ---------------------------------------------------------------------------
 -- Recipe items: where a recipe comes from when no trainer teaches it
 ---------------------------------------------------------------------------
+-- Reputation: your standing with a faction, 0 Hated .. 3 Neutral, 4 Friendly,
+-- 5 Honored, 6 Revered, 7 Exalted (nil if the game doesn't say)
+local FACTION_NAMES = { [59] = "Thorium Brotherhood", [270] = "Zandalar Tribe", [529] = "Argent Dawn", [576] = "Timbermaw Hold",
+	[609] = "Cenarion Circle", [910] = "Brood of Nozdormu" }
+local STANDING_NAMES = { "Hated", "Hostile", "Unfriendly", "Neutral", "Friendly", "Honored", "Revered", "Exalted" }
+
+function SP.Standing(factionID)
+	if C_Reputation and C_Reputation.GetFactionDataByID then
+		local ok, d = pcall(C_Reputation.GetFactionDataByID, factionID)
+		if ok and type(d) == "table" and type(d.reaction) == "number" then return d.reaction - 1 end
+	end
+	if GetFactionInfoByID then
+		local ok, _, _, standing = pcall(GetFactionInfoByID, factionID)
+		if ok and type(standing) == "number" and standing > 0 then return standing - 1 end
+	end
+end
+
+function SP.FactionName(factionID)
+	if C_Reputation and C_Reputation.GetFactionDataByID then
+		local ok, d = pcall(C_Reputation.GetFactionDataByID, factionID)
+		if ok and type(d) == "table" and type(d.name) == "string" and d.name ~= "" then return d.name end
+	end
+	if GetFactionInfoByID then
+		local ok, name = pcall(GetFactionInfoByID, factionID)
+		if ok and type(name) == "string" and name ~= "" then return name end
+	end
+	return FACTION_NAMES[factionID] or ("faction " .. factionID)
+end
+
+function SP.StandingName(standing)
+	if not standing then return "?" end
+	local label = _G["FACTION_STANDING_LABEL" .. (standing + 1)]
+	return type(label) == "string" and label or STANDING_NAMES[standing + 1] or "?"
+end
+
+-- Your other characters that hold an item, from Syndicator (if you use it):
+-- { { name = "Mega", spot = "bank" }, ... }
+function SP.AltsWith(itemID)
+	local api = Syndicator and Syndicator.API and Syndicator.API.GetInventoryInfoByItemID
+	if not api then return {} end
+	local ok, info = pcall(api, itemID, true, true)
+	if not ok or type(info) ~= "table" or type(info.characters) ~= "table" then return {} end
+	local me = UnitName and UnitName("player")
+	local out = {}
+	for _, c in ipairs(info.characters) do
+		if type(c) == "table" and c.character and c.character ~= me then
+			local spot = ((c.bags or 0) > 0 and "bags") or ((c.bank or 0) > 0 and "bank") or ((c.mail or 0) > 0 and "mail") or nil
+			if spot then out[#out + 1] = { name = c.character, spot = spot } end
+		end
+	end
+	table.sort(out, function(a, b) return a.name < b.name end)
+	return out
+end
+
 -- Every way to get a recipe spell, best first:
 -- { kind = "bags" | "vendor" | "ah" | "drop" | "quest" | "object", item, skill, price, npc, ... }
 function SP.RecipeSources(spellID)
@@ -184,19 +244,32 @@ function SP.RecipeSources(spellID)
 	if not rows then return {} end
 	local out = {}
 	for _, e in ipairs(rows) do
-		local item, skill, price, bop, vendors, drops, nDrops, objects, quests =
-			e[1], e[2], e[3], e[4], e[5], e[6], e[7], e[8], e[9]
+		local item, skill, price, bop, vendors, drops, nDrops, objects, quests, faction, standing =
+			e[1], e[2], e[3], e[4], e[5], e[6], e[7], e[8], e[9], e[10], e[11]
 		local base = { item = item, skill = skill, bop = bop }
 		local function Add(t) for k, v in pairs(base) do if t[k] == nil then t[k] = v end end out[#out + 1] = t end
-		if SP.Owned and SP.Owned(item) > 0 then Add({ kind = "bags", price = 0 }) end
-		-- vendors anyone can buy from; reputation vendors are shown, holiday ones left out
+		-- a plan that needs reputation: only if you have it
+		local have = faction and SP.Standing(faction)
+		local repOK = not faction or (have and have >= standing)
+		if faction then base.faction, base.standing, base.have = faction, standing, have end
+		if repOK and SP.Owned and SP.Owned(item) > 0 then
+			Add({ kind = "bags", price = 0 })
+		elseif repOK and not bop then
+			-- on one of your other characters: mail it over
+			local alt = SP.AltsWith(item)[1]
+			if alt then Add({ kind = "alt", price = 0, alt = alt }) end
+		end
+		-- vendors anyone can buy from, and reputation vendors once you have the
+		-- reputation; the rest are shown, holiday vendors left out
 		local open, rep = {}, {}
 		for _, npc in ipairs(SP.SortByDistance(vendors)) do
-			if npc.rep then rep[#rep + 1] = npc elseif not npc.event then open[#open + 1] = npc end
+			if npc.event then -- left out
+			elseif (npc.rep and not (faction and repOK)) or not repOK then rep[#rep + 1] = npc
+			else open[#open + 1] = npc end
 		end
 		if open[1] then Add({ kind = "vendor", price = price, npc = open[1], others = #open - 1 }) end
 		if rep[1] then Add({ kind = "rep", price = price, npc = rep[1] }) end
-		if not bop then
+		if not bop and repOK then
 			local ah = SP.Price and SP.Price(item)
 			if ah then Add({ kind = "ah", price = ah }) end
 		end
@@ -219,12 +292,19 @@ end
 function SP.SourceText(s)
 	local item = SP.RecipeItemName(s.item)
 	if s.kind == "bags" then return "You have " .. item .. ": use it to learn the recipe." end
+	if s.kind == "alt" then return s.alt.name .. " has " .. item .. " (" .. s.alt.spot .. "): mail it to this character." end
 	if s.kind == "vendor" then
 		return "Buy " .. item .. " from " .. s.npc.name .. " (" .. SP.NpcPlace(s.npc) .. ")"
 			.. (s.price and (" for about " .. SP.Money(s.price)) or "") .. "."
 	end
 	if s.kind == "rep" then
-		return item .. " is sold by " .. s.npc.name .. " (" .. SP.NpcPlace(s.npc) .. ") to players with enough reputation."
+		local who = s.npc.name .. " (" .. SP.NpcPlace(s.npc) .. ")"
+		if s.faction then
+			return item .. " is sold by " .. who .. " at " .. SP.StandingName(s.standing) .. " with " .. SP.FactionName(s.faction)
+				.. (s.have and (" (you're " .. SP.StandingName(s.have) .. ")") or "") .. "."
+		end
+		if s.npc.note then return item .. " is sold by " .. who .. ", " .. s.npc.note .. "." end
+		return item .. " is sold by " .. who .. " to players with enough reputation."
 	end
 	if s.kind == "ah" then return "Buy " .. item .. " at the Auction House (about " .. SP.Money(s.price) .. ")." end
 	if s.kind == "quest" then
@@ -251,6 +331,9 @@ function SP.LearnWhere(prof, e)
 	local how = e.source or "trainer"
 	local item = e.item and SP.RecipeItemName(e.item)
 	if how == "bags" then return "the " .. (item or "recipe") .. " in your bags" end
+	if how == "alt" and type(e.where) == "table" and e.where.spot then
+		return "the " .. (item or "recipe") .. " on " .. e.where.name .. " (" .. e.where.spot .. "): mail it to this character"
+	end
 	if how == "ah" then return "the Auction House (" .. (item or "recipe") .. ")" end
 	if how == "vendor" and e.where then
 		return (item or "the recipe") .. " from " .. e.where.name .. " in " .. SP.NpcPlace(e.where), e.where
@@ -314,4 +397,92 @@ function SP.SpecNote(prof, plan)
 		text = text .. " Recipes only a specialist can learn are left out of the plan until then."
 	end
 	return text
+end
+
+---------------------------------------------------------------------------
+-- When a plan stops early: the best ways past that point (plans from
+-- reputation vendors, quests and common drops, which aren't planned)
+---------------------------------------------------------------------------
+local function RecipeName(id)
+	if C_TradeSkillUI and C_TradeSkillUI.GetRecipeInfo then
+		local ok, r = pcall(C_TradeSkillUI.GetRecipeInfo, id)
+		if ok and type(r) == "table" and type(r.name) == "string" and r.name ~= "" then return r.name end
+	end
+	if C_Spell and C_Spell.GetSpellName then
+		local ok, n = pcall(C_Spell.GetSpellName, id)
+		if ok and type(n) == "string" and n ~= "" then return n end
+	end
+end
+
+local ORDER = { rep = 1, quest = 2, drop = 3 }
+function SP.WaysPast(prof, level, count)
+	local data = prof and SP.DATA and SP.DATA[prof.id]
+	if not (data and level) then return {} end
+	local have = SP.MySpecs and SP.MySpecs() or {}
+	local found = {}
+	for id, d in pairs(data) do
+		local gray = d[2]
+		if gray > level and not (SP.COOLDOWN and (SP.COOLDOWN[id] or 0) > 300)
+			and not (SP.SpecBlocks and SP.SpecBlocks(id, have)) then
+			for _, src in ipairs(SP.RecipeSources(id)) do
+				local at = src.skill or d[1]
+				local useful = ORDER[src.kind] and at <= level + 10
+					and (src.kind ~= "drop" or src.count >= 20) -- rare drops aren't a way
+				if useful then
+					-- a vendor with a special requirement (Magnus Frostwake) comes last
+					local rank = (src.kind == "rep" and not src.faction) and 4 or ORDER[src.kind]
+					found[#found + 1] = { id = id, src = src, at = at, rank = rank, gray = gray, now = at <= level,
+						gap = src.faction and (src.standing - (src.have or 3)) or 0 }
+					break
+				end
+			end
+		end
+	end
+	table.sort(found, function(a, b)
+		if a.rank ~= b.rank then return a.rank < b.rank end
+		if a.now ~= b.now then return a.now end
+		if a.gap ~= b.gap then return a.gap < b.gap end
+		if a.gray ~= b.gray then return a.gray > b.gray end
+		return a.id < b.id
+	end)
+	local out, kinds, seen = {}, {}, {}
+	for _, f in ipairs(found) do
+		-- a mix: at most two of a kind, one per vendor or quest
+		local who = (f.src.npc and ("npc" .. f.src.npc.id)) or (f.src.quest and ("q" .. f.src.quest)) or ("r" .. f.id)
+		if (kinds[f.src.kind] or 0) < 2 and not seen[who] then
+			seen[who] = true
+			kinds[f.src.kind] = (kinds[f.src.kind] or 0) + 1
+			local name = RecipeName(f.id)
+			if name then
+				f.name = name
+				out[#out + 1] = f
+				if #out >= (count or 3) then break end
+			end
+		end
+	end
+	return out
+end
+
+-- "Goregasher Grips (plans from Vargus, Silithus 51.2, 38.9, at Friendly with Cenarion Circle; you're Neutral)"
+function SP.WayText(f)
+	local s, text = f.src, nil
+	if s.kind == "rep" then
+		local who = s.npc.name .. ", " .. SP.NpcPlace(s.npc)
+		if s.faction then
+			text = "plans from " .. who .. ", at " .. SP.StandingName(s.standing) .. " with " .. SP.FactionName(s.faction)
+				.. (s.have and ("; you're " .. SP.StandingName(s.have)) or "")
+		else
+			text = "plans from " .. who .. (s.npc.note and (", " .. s.npc.note) or "")
+		end
+	elseif s.kind == "quest" then
+		local q = SP.QUEST_NAMES and SP.QUEST_NAMES[s.quest] or ("quest " .. s.quest)
+		if C_QuestLog and C_QuestLog.GetTitleForQuestID then
+			local ok, t = pcall(C_QuestLog.GetTitleForQuestID, s.quest)
+			if ok and type(t) == "string" and t ~= "" then q = t end
+		end
+		text = "plans from the quest " .. q
+	elseif s.kind == "drop" then
+		text = "plans drop from " .. s.count .. " kinds of creatures" .. (s.bop and "" or ", or look on the Auction House")
+	end
+	return f.name .. " (" .. text .. (f.at > 0 and (", from skill " .. f.at) or "") .. ")"
 end
