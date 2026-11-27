@@ -447,17 +447,36 @@ end
 -- Your characters: professions and where each one stands (saved for the
 -- whole account, updated whenever you log in or open a profession).
 ---------------------------------------------------------------------------
--- The game doesn't always give the realm name on Forever (it can be empty,
--- even well after login). Until it's known, the key is "Name-"; once it is,
--- anything saved under "Name-" moves to "Name-Realm".
+-- Which character this is. On Forever, UnitFullName gives the part after the
+-- hyphen in the character's name ("Krigar" + "Kossan", like the WTF folder
+-- Krigar-Kossan), every time. GetRealmName is unreliable there: sometimes the
+-- server's name, sometimes that same part, sometimes empty. So the key is
+-- name + that part, and older entries saved under a server name (it has
+-- spaces) or an empty one move to it.
+local function Plainstr(v)
+	if type(v) ~= "string" or v == "" or (issecretvalue and issecretvalue(v)) then return nil end
+	return v
+end
+
+local function StablePart()
+	for _, try in ipairs({
+		function() return select(2, UnitFullName("player")) end,
+		function() return select(2, UnitName("player")) end,
+	}) do
+		local ok, r = pcall(try)
+		r = ok and Plainstr(r)
+		if r then return r end
+	end
+end
+
 local function RealmName()
 	for _, try in ipairs({
 		function() return GetRealmName() end,
 		function() return GetNormalizedRealmName() end,
-		function() return select(2, UnitFullName("player")) end,
 	}) do
 		local ok, r = pcall(try)
-		if ok and type(r) == "string" and r ~= "" and not (issecretvalue and issecretvalue(r)) then return r end
+		r = ok and Plainstr(r)
+		if r then return r end
 	end
 end
 
@@ -489,15 +508,40 @@ function SP.MergeEmptyRealm(old, full)
 	end
 end
 
+-- Move "Name-" and "Name-<server name>" entries to the stable key
+function SP.MergeOldKeys(name, full)
+	local db = SP.db
+	if not db then return end
+	local prefix = name .. "-"
+	local olds = {}
+	local function Consider(key)
+		if type(key) ~= "string" or key:sub(1, #prefix) ~= prefix then return end
+		local part = key:sub(#prefix + 1):match("^[^:]*")
+		local old = prefix .. part
+		if old ~= full and (part == "" or part:find(" ")) then olds[old] = true end
+	end
+	for _, t in ipairs({ db.chars, db.known, db.said, db.legacyNear }) do
+		for k in pairs(t or {}) do Consider(k) end
+	end
+	for old in pairs(olds) do SP.MergeEmptyRealm(old, full) end
+end
+
 local function MyKey()
-	local name = UnitName and UnitName("player") or "?"
-	if type(name) ~= "string" or (issecretvalue and issecretvalue(name)) then name = "?" end
-	local realm = SP.realm or RealmName()
-	if realm and SP.db then
-		if not SP.realm then
-			SP.realm = realm
-			SP.MergeEmptyRealm(name .. "-", name .. "-" .. realm)
+	local ok, name = pcall(UnitName, "player")
+	name = ok and Plainstr(name) or "?"
+	local part = SP.realm or StablePart()
+	if part then
+		if not SP.realm and SP.db then
+			SP.realm = part
+			SP.MergeOldKeys(name, name .. "-" .. part)
 		end
+		return name .. "-" .. part
+	end
+	-- no stable part: the realm, as WoW usually has it
+	local realm = RealmName()
+	if realm and SP.db and not SP.mergedEmpty then
+		SP.mergedEmpty = true
+		SP.MergeEmptyRealm(name .. "-", name .. "-" .. realm)
 	end
 	return name .. "-" .. (realm or "")
 end

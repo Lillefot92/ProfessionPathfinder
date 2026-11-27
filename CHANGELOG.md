@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.3
+
+- Each character now keeps one set of saved data. On Forever the game sometimes gives the server's name as your realm, sometimes the second part of your character's name ("Kossan" in Krigar-Kossan) and sometimes nothing, so a character could end up saved twice (and an alt could show up twice in gather & craft mode). The character is now always known by that second part, which never changes, and what was saved under the server's name moves there when you log in on that character.
+
 ## 1.2.2
 
 - Recipes with a cooldown are no longer planned: the transmutes (Iron to Gold, Mithril to Truesilver, Arcanite, the elemental ones), Mooncloth and Refined Scale of Onyxia. You can only make them once in a while, so they can't be part of a leveling route, and they aren't used to make materials either. Thanks for the report on CurseForge!

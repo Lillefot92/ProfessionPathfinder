@@ -39,9 +39,34 @@ assert(SP.db.chars["Krigar-CAMWOW"] and not SP.db.chars["Krigar-"], "character m
 assert(SP.db.said["Krigar-CAMWOW:learn:Blacksmithing:X"] and not SP.db.said["Krigar-:learn:Blacksmithing:X"], "reminders moved")
 assert(SP.db.said["Other-Realm:learn:Y"], "others untouched")
 assert(SP.db.known["Krigar-CAMWOW"].Mining and SP.db.known["Krigar-CAMWOW"].Blacksmithing and not SP.db.known["Krigar-"], "known recipes merged")
--- and later empty answers keep the full key
+
+-- Forever: UnitFullName gives "Krigar" + "Kossan" every time, while
+-- GetRealmName flips between the server's name, "Kossan" and nothing.
+-- The key is always Krigar-Kossan, and the server-name entries move to it.
+SP.realm = nil; SP.mergedEmpty = nil
+SP.db.chars = {
+	["Krigar-CAMWOW EU4 Realm 6 PvP"] = { name = "Krigar", updated = 50, profs = { Blacksmithing = { skill = 182 } } },
+	["Krigar-Kossan"] = { name = "Krigar", updated = 40, profs = { Cooking = { skill = 100 } } },
+	["Krigar-"] = { name = "Krigar", updated = 10 },
+	["Sneaky-CAMWOW EU4 Realm 6 PvP"] = { name = "Sneaky", updated = 30 },
+	["Sneaky-Lillefot"] = { name = "Sneaky", updated = 35 },
+}
+SP.db.said = { ["Krigar-CAMWOW EU4 Realm 6 PvP:rank:Blacksmithing:Expert"] = true, ["Krigar-Kossan:rank:Cooking:Artisan"] = true,
+	["Sneaky-CAMWOW EU4 Realm 6 PvP:rank:Skinning:Journeyman"] = true }
+SP.db.known = { ["Krigar-CAMWOW EU4 Realm 6 PvP"] = { Blacksmithing = { 1 } }, ["Krigar-Kossan"] = { Cooking = { 2 } } }
+UnitFullName = function() return "Krigar", "Kossan" end
+UnitName = function() return "Krigar", "Kossan" end
+REALM = "CAMWOW EU4 Realm 6 PvP"
+assert(SP.MyKey() == "Krigar-Kossan", SP.MyKey())
+assert(not SP.db.chars["Krigar-CAMWOW EU4 Realm 6 PvP"] and not SP.db.chars["Krigar-"], "old Krigar keys merged")
+assert(SP.db.chars["Krigar-Kossan"].updated == 50, "the newer record wins")
+assert(SP.db.said["Krigar-Kossan:rank:Blacksmithing:Expert"] and SP.db.said["Krigar-Kossan:rank:Cooking:Artisan"])
+assert(SP.db.known["Krigar-Kossan"].Blacksmithing and SP.db.known["Krigar-Kossan"].Cooking)
+assert(SP.db.chars["Sneaky-CAMWOW EU4 Realm 6 PvP"] and SP.db.said["Sneaky-CAMWOW EU4 Realm 6 PvP:rank:Skinning:Journeyman"], "other characters wait for their own login")
 REALM = ""
-assert(SP.MyKey() == "Krigar-CAMWOW")
+assert(SP.MyKey() == "Krigar-Kossan")
+REALM = "Kossan"
+assert(SP.MyKey() == "Krigar-Kossan")
 
 SP.OvertimeBonus = function() return 0 end
 SP.Chance = function() return 1 end
