@@ -86,6 +86,16 @@ end
 bs = SP.MissingRecipes({ name = "Blacksmithing", id = 164, skill = 300, max = 300 })
 assert(bs.otherSpec > 0 and not Find(bs, 9954), "Armorsmith/Weaponsmith recipes left out without the specialization")
 print("other specializations left out: " .. bs.otherSpec .. ", Blacksmithing missing: " .. bs.total)
+-- colors above the 300 cap aren't shown (Smelt Elementium: orange until 310 in the data)
+assert(SP.SkillUpsText(310, 320) == "Skill-ups: orange all the way to 300.")
+assert(SP.SkillUpsText(280, 310):find("up to 300"))
+assert(SP.SkillUpsText(175, 215) == "Skill-ups: orange until 175, gray from 215.")
+-- gather & craft mode: the Auctionator button explains why there's nothing to buy
+Auctionator = { API = { v1 = { CreateShoppingList = function() end } } }
+local gplan = { selfGather = true, shopping = { { itemID = 1, source = "vendor", count = 1 }, { itemID = 2, gather = "mine", count = 3 } } }
+assert(SP.AuctionItems(gplan) == 0)
+local okx, msg = SP.ExportToAuctionator(gplan)
+assert(not okx and msg:find("gather & craft mode is on"), tostring(msg))
 -- every profession, both factions: the list and the window build without errors
 for _, fac in ipairs({ "Horde", "Alliance" }) do
 	FACTION = fac

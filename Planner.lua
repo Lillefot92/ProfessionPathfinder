@@ -480,8 +480,22 @@ function SP.MakePlan(prof, recipes, db, others, candidates)
 end
 
 -- Send the shopping list to Auctionator as a shopping list.
+-- How many shopping list items are bought at the Auction House (not gathered,
+-- not from a vendor)
+function SP.AuctionItems(plan)
+	local n = 0
+	for _, item in ipairs(plan and plan.shopping or {}) do
+		if item.source ~= "vendor" and not item.gather then n = n + 1 end
+	end
+	return n
+end
+
 function SP.ExportToAuctionator(plan)
 	if not (SP.HasAuctionator() and Auctionator.API.v1.CreateShoppingList) then return false, "Auctionator isn't loaded" end
+	if plan.selfGather and SP.AuctionItems(plan) == 0 then
+		return false, "gather & craft mode is on, so this plan buys nothing at the Auction House (only vendor items)."
+			.. " Turn it off with /ppf gather or in the options to plan with Auction House prices"
+	end
 	local api = Auctionator.API.v1
 	local terms = {}
 	for _, item in ipairs(plan.shopping) do

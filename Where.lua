@@ -494,12 +494,20 @@ local function CollectEntry(prof, e, c)
 	return e
 end
 
+-- "Skill-ups: orange until 175, gray from 215"; skill stops at 300, so colors
+-- above it are left out ("orange all the way to 300")
+function SP.SkillUpsText(yellow, gray)
+	if yellow >= 300 then return "Skill-ups: orange all the way to 300." end
+	if gray > 300 then return "Skill-ups: orange until " .. yellow .. ", then yellow or green up to 300." end
+	return "Skill-ups: orange until " .. yellow .. ", gray from " .. gray .. "."
+end
+
 function SP.MissingEntry(prof, id, r)
 	local line = prof.id
 	local e = { id = id, name = r and r.name or (C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(id)) or ("recipe " .. id),
 		icon = r and r.icon, tips = {} }
 	local d = SP.DATA[line] and SP.DATA[line][id]
-	if d then e.tips[#e.tips + 1] = "|cff999999Skill-ups: orange until " .. d[1] .. ", gray from " .. d[2] .. ".|r" end
+	if d then e.tips[#e.tips + 1] = "|cff999999" .. SP.SkillUpsText(d[1], d[2]) .. "|r" end
 	if SP.NPC_TAUGHT and SP.NPC_TAUGHT[id] then
 		e.group, e.where = "world", SP.NPC_TAUGHT[id]
 		table.insert(e.tips, 1, "Taught by " .. SP.NPC_TAUGHT[id] .. ".")

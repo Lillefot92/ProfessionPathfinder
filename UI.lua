@@ -236,6 +236,17 @@ function UI:Create()
 		else print(PREFIX .. "couldn't create the list: " .. msg) end
 	end)
 	f.ahButton:SetPoint("BOTTOMLEFT", 8, 8)
+	-- why it's greyed out (gather & craft mode, no Auctionator)
+	if f.ahButton.SetMotionScriptsWhileDisabled then f.ahButton:SetMotionScriptsWhileDisabled(true) end
+	f.ahButton:SetScript("OnEnter", function(b)
+		if not b.tip then return end
+		GameTooltip:SetOwner(b, "ANCHOR_TOP")
+		for i, line in ipairs(b.tip) do
+			if i == 1 then GameTooltip:SetText(line) else GameTooltip:AddLine(line, 1, 1, 1, true) end
+		end
+		GameTooltip:Show()
+	end)
+	f.ahButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
 	f.bagButton = MakeButton(f, "", 104, function()
 		SP.db.bagsFree = not SP.db.bagsFree
@@ -338,7 +349,13 @@ function UI:Show(prof, plan, loading)
 	for _, row in ipairs(self.makes) do row:Hide(); row.pin = nil end
 	for _, row in ipairs(self.items) do row:Hide(); row.pin = nil end
 	f.bagButton:SetText(SP.db.bagsFree and "My mats: on" or "My mats: off")
-	f.ahButton:SetEnabled(SP.HasAuctionator() and plan ~= nil and #plan.shopping > 0)
+	local auctionItems = SP.AuctionItems(plan)
+	f.ahButton:SetEnabled(SP.HasAuctionator() and auctionItems > 0)
+	f.ahButton.tip = not SP.HasAuctionator() and { "Auctionator list", "Needs the Auctionator addon." }
+		or (plan and plan.selfGather and auctionItems == 0) and { "Auctionator list",
+			"Gather & craft mode is on: this plan buys nothing at the Auction House, only vendor items.",
+			"Turn it off with /ppf gather or in the options to plan with Auction House prices." }
+		or { "Auctionator list", "Sends what to buy at the Auction House to an Auctionator shopping list." }
 	f.note:SetText("")
 	f.total:SetText("")
 	f.makeHeader:Hide()
