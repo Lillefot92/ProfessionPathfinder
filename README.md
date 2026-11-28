@@ -23,6 +23,8 @@ Download it on [CurseForge](https://www.curseforge.com/wow/addons/profession-pat
 - Counts the Working Overtime Legacy perk and shows when you're close to a Legacy point.
 - With no profession window open, `/ppf` shows where to mine, pick herbs, skin and fish for your skill.
 - Fishing helper: one key to cast and loot, lure reminder, zone advice, catch log, and the fish your Cooking plan still needs.
+- Once a profession reaches 300 (or with the Missing button), lists the recipes you don't know yet and how to get each one: trainer, vendor, reputation, quest or drop.
+- Mining shows which smelts give skill now and when to learn the next one.
 - Works in any game language.
 
 <p>

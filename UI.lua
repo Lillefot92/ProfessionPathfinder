@@ -244,10 +244,24 @@ function UI:Create()
 	f.bagButton:SetPoint("BOTTOMRIGHT", -8, 8)
 
 
-	-- Without a profession window: switch between gathering and characters
+	-- Without a profession window: switch between gathering and characters.
+	-- With one: switch between the plan and the recipes you're missing.
 	f.viewButton = MakeButton(f, "Characters", 104, function()
-		UI.view = (UI.view == "chars") and "gather" or "chars"
+		if UI.prof then
+			UI.profView = UI:MissingShown() and "plan" or "missing"
+			UI.scroll = 0
+		else
+			UI.view = (UI.view == "chars") and "gather" or "chars"
+		end
 		SP.RequestRefresh()
+	end)
+	-- Scroll the missing recipes list with the mouse wheel
+	f:EnableMouseWheel(true)
+	f:SetScript("OnMouseWheel", function(_, delta)
+		if not UI.missingRows then return end
+		local maxScroll = math.max(0, #UI.missingRows - UI:RowCount())
+		UI.scroll = math.max(0, math.min(maxScroll, (UI.scroll or 0) - delta * 3))
+		UI:RenderMissing()
 	end)
 	f.viewButton:SetPoint("BOTTOMLEFT", 8, 8)
 	f.viewButton:Hide()
@@ -335,12 +349,23 @@ function UI:Show(prof, plan, loading)
 	f.planHeader:SetText("Plan (click a step to open the recipe)")
 	f.shopHeader:SetText(SP.db.selfGather and "Gather and buy (gather & craft mode)" or "Shopping list")
 	f.shopHeader:Show()
-	f.viewButton:SetShown(not prof)
+	self.prof = prof
+	self.missingRows = nil
+	f.viewButton:SetShown(not prof or not loading)
 	f.ahButton:SetShown(prof ~= nil)
 	f.bagButton:SetShown(prof ~= nil)
 	if not prof then
 		self:ShowGathering()
 		return
+	end
+	f.viewButton:ClearAllPoints()
+	if prof then f.viewButton:SetPoint("BOTTOM", 0, 8) else f.viewButton:SetPoint("BOTTOMLEFT", 8, 8) end
+	if not loading then
+		f.viewButton:SetText(self:MissingShown() and "Plan" or "Missing")
+		if self:MissingShown() then
+			self:ShowMissing(prof)
+			return
+		end
 	end
 	if loading then
 		f.sub:SetText(prof.label or prof.name)
@@ -372,7 +397,8 @@ function UI:Show(prof, plan, loading)
 				.. (rs.levelOK and " now" or (" at character level " .. rs.level)) .. " (cap " .. rs.cap .. ")."
 				.. (first and " Nearest first: click one to pin it on your map." or ""))
 		else
-			f.note:SetText("You're at the skill cap. Visit a trainer to learn the next rank.")
+			f.note:SetText((prof.max or 0) >= 300 and "You've reached 300. Click Missing to see the recipes you can still learn."
+				or "You're at the skill cap. Visit a trainer to learn the next rank.")
 		end
 		self.next = nil
 		self:UpdateCraftButton()
@@ -1279,6 +1305,100 @@ local CLASS_COLOR = function(class)
 	local c = class and RAID_CLASS_COLORS and RAID_CLASS_COLORS[class]
 	if c and c.colorStr then return c.colorStr end
 	return "ffffffff"
+end
+
+-- The missing recipes view: shown once you've reached 300, or when you
+-- click "Missing recipes"
+function UI:MissingShown()
+	local prof = self.prof
+	if not prof then return false end
+	if self.profView == "missing" then return true end
+	if self.profView == "plan" then return false end
+	return (prof.skill or 0) >= 300
+end
+
+function UI:AllRows()
+	local rows = {}
+	for _, r in ipairs(self.steps) do rows[#rows + 1] = r end
+	for _, r in ipairs(self.makes) do rows[#rows + 1] = r end
+	for _, r in ipairs(self.items) do rows[#rows + 1] = r end
+	return rows
+end
+
+function UI:RowCount() return #self.steps + #self.makes + #self.items end
+
+local MISSING_ICON = { now = "Interface\\Icons\\INV_Misc_Note_01", trainer = "Interface\\Icons\\INV_Misc_Note_01",
+	vendor = "Interface\\Icons\\INV_Misc_Coin_01", favor = "Interface\\Icons\\INV_Misc_Coin_02",
+	rep = "Interface\\Icons\\INV_Misc_Token_ArgentDawn", quest = "Interface\\GossipFrame\\AvailableQuestIcon",
+	drop = "Interface\\Icons\\INV_Misc_Bag_10", ah = "Interface\\Icons\\INV_Misc_Coin_03",
+	world = "Interface\\Icons\\INV_Misc_Map_01", seasonal = "Interface\\Icons\\INV_Holiday_Christmas_Present_01", unknown = "Interface\\Icons\\INV_Misc_QuestionMark" }
+
+function UI:ShowMissing(prof)
+	local f = self.frame
+	f.craftButton:Hide()
+	f.makeHeader:Hide()
+	f.shopHeader:Hide()
+	f.ahButton:Hide()
+	f.bagButton:Hide()
+	f.total:SetText("")
+	f.sub:SetText(string.format("%s  |cffffffff%d / %d|r", prof.label or prof.name, prof.skill or 0, prof.max or 0))
+	f.legacy:SetText("")
+	local m = SP.MissingRecipes(prof)
+	local list = {}
+	for _, key in ipairs(SP.MISSING_ORDER) do
+		local g = m.groups[key]
+		if g and #g > 0 then
+			list[#list + 1] = { header = true, text = "|cffffd100" .. SP.MISSING_TITLES[key] .. "|r |cff999999(" .. #g .. ")|r" }
+			for _, e in ipairs(g) do
+				list[#list + 1] = { entry = e, icon = e.icon or MISSING_ICON[key], text = "  " .. e.name,
+					right = e.where and ShortZone(e.where) or "" }
+			end
+		end
+	end
+	f.planHeader:SetText(string.format("Recipes you're missing: you know %d of %d", m.known, m.total))
+	local missing = m.total - m.known
+	f.note:SetText(missing == 0 and ("You know every " .. (prof.label or prof.name) .. " recipe the addon knows how to get. Well done!")
+		or ("Easiest first. Left-click opens the recipe, right-click (or a click on a row without a recipe) pins where to get it."
+			.. " Scroll with the mouse wheel." .. (m.otherSpec > 0 and (" " .. m.otherSpec .. " recipes for other specializations are left out.") or "")))
+	self.missingRows = list
+	self.scroll = math.min(self.scroll or 0, math.max(0, #list - self:RowCount()))
+	self:RenderMissing()
+end
+
+function UI:RenderMissing()
+	local rows, list = self:AllRows(), self.missingRows or {}
+	local off = self.scroll or 0
+	for i, row in ipairs(rows) do
+		local item = list[off + i]
+		row.pin, row.recipeID, row.tip = nil, nil, nil
+		if item then
+			row.icon:SetTexture(item.icon)
+			row.text:SetText(item.text)
+			row.right:SetText(item.right or "")
+			if item.entry then
+				local e = item.entry
+				row.recipeID = e.id
+				row.pin = e.pin
+				local tip = { e.name }
+				for _, t in ipairs(e.tips) do tip[#tip + 1] = t end
+				if e.pin then tip[#tip + 1] = "|cff66bbffRight-click to pin " .. e.pin.name .. " on your map.|r" end
+				row.tip = tip
+			end
+			row:Show()
+		else
+			row:Hide()
+		end
+	end
+	if #list > #rows then
+		local last = rows[#rows]
+		local more = #list - off - #rows
+		if more > 0 then
+			last.icon:SetTexture(nil)
+			last.text:SetText("|cff999999... " .. (more + 1) .. " more (scroll down)|r")
+			last.right:SetText("")
+			last.pin, last.recipeID, last.tip = nil, nil, nil
+		end
+	end
 end
 
 function UI:ShowCharacters()

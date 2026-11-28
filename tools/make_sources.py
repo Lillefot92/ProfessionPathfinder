@@ -473,6 +473,65 @@ with open(OUT, "w", encoding="utf-8", newline="\n") as f:
     for qid in sorted(qn):
         f.write("\t[%d]=%s,\n" % (qid, q(quest[qid][1])))
     f.write("}\n")
+    # Quests that reward a recipe: level, level needed, who starts them (for the
+    # missing recipes list)
+    f.write("\n-- Recipe quests: [quest] = { quest level, level needed, { NPCs that start it } }\nSP.QUEST_INFO = {\n")
+    rq = set()
+    for sid in recipes:
+        for e in recipes[sid]: rq.update(e["quests"])
+    for qid in sorted(rq):
+        r = quest[qid]
+        f.write("\t[%d]={%d,%d,{%s}},\n" % (qid, r.get(5) or 0, r.get(4) or 0, ",".join(str(n) for n in quest_starts(qid))))
+    f.write("}\n")
+    # Where to get recipes the rest of the data has no source for (wow.gg), for
+    # the missing recipes list only: never planned
+    import json as _json
+    col = _json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "forever_collect.json"), encoding="utf-8"))
+    in_maybe = {sid for ids_ in maybe.values() for sid in ids_}
+    def lstr(x): return "nil" if x is None else (q(x) if isinstance(x, str) else ("%g" % x))
+    f.write("\n-- Where to get recipes nothing else here covers (wow.gg), for the missing recipes list:\n")
+    f.write("-- [recipe spell] = { t = taught by a trainer, n = recipe item, c = {currency, amount},\n")
+    f.write("--   v = {{vendor, zone, side, price}}, d = {{creature, zone, chance}}, dn = how many drop it,\n")
+    f.write("--   q = {{quest, zone, side, level}}, o = found in objects/places/the world }\nSP.COLLECT = {\n")
+    ncol = 0
+    for line_s, recs in sorted(col.items()):
+        line = int(line_s)
+        for sid_s, c in sorted(recs.items(), key=lambda kv: int(kv[0])):
+            sid = int(sid_s)
+            if sid in recipes or sid in in_maybe or sid in START.get(line, ()) or sid in NPC_TAUGHT: continue
+            if sid not in DATA.get(line, {}): continue
+            parts = []
+            if c.get("t"): parts.append("t=1")
+            if c.get("n"): parts.append("n=" + q(c["n"]))
+            if c.get("cost"): parts.append("c={%s,%s}" % (lstr(c["cost"][0]), lstr(c["cost"][1])))
+            if c.get("v"): parts.append("v={" + ",".join("{%s,%s,%s,%s}" % tuple(lstr(x) for x in v) for v in c["v"]) + "}")
+            if c.get("d"): parts.append("d={" + ",".join("{%s,%s,%s}" % tuple(lstr(x) for x in d) for d in c["d"]) + "}")
+            if c.get("dn"): parts.append("dn=%d" % c["dn"])
+            if c.get("q"): parts.append("q={" + ",".join("{%s,%s,%s,%s}" % tuple(lstr(x) for x in qq) for qq in c["q"]) + "}")
+            if c.get("o"): parts.append("o=" + q(c["o"]))
+            if not parts: continue
+            f.write("\t[%d]={%s},\n" % (sid, ",".join(parts)))
+            ncol += 1
+    f.write("}\n")
+    print("recipes for the missing list only (wow.gg):", ncol)
+    # Recipes in the game's tables that wow.gg's Forever lists don't have, with no
+    # other source either: from other game versions, left out of the missing list
+    f.write("\n-- Recipes not in WoW Forever as far as wow.gg and the rest of the data know (left out of the missing list)\nSP.NOT_LISTED = {")
+    nl = 0
+    for line in sorted(col):
+        L_ = int(line)
+        for sid in sorted(DATA.get(L_, {})):
+            if (L_, sid) in GG or sid in recipes or sid in in_maybe or sid in START.get(L_, ()) or sid in NPC_TAUGHT: continue
+            if str(sid) in col[line]: continue
+            f.write(("\n\t" if nl % 14 == 0 else " ") + "[%d]=true," % sid)
+            nl += 1
+    f.write("\n}\n")
+    print("recipes not listed for Forever:", nl)
+    # Recipes taught by an NPC out in the world (no item, no trainer)
+    f.write("\n-- Taught by an NPC in the world: [recipe spell] = where\nSP.NPC_TAUGHT = {\n")
+    for sid, where_ in sorted(NPC_TAUGHT.items()):
+        f.write("\t[%d]=%s,\n" % (sid, q(where_)))
+    f.write("}\n")
     # Materials a regular vendor sells (thread, vials, flux, dyes, spices...),
     # for the gather & craft mode: the planner may buy these, nothing else
     f.write("\n-- Specializations: [spell] = { name, profession line, skill, level, needs first, trainers, who starts it }\nSP.SPECS = {\n")

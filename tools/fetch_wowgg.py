@@ -1,6 +1,8 @@
 """Where each recipe is learned, from wow.gg's WoW Forever profession lists.
 
-Writes tools/data/forever_recipe_sources.txt, one line per recipe:
+Writes tools/data/forever_collect.json (vendors, drops and quests for each
+recipe, for the missing recipes list) and tools/data/forever_recipe_sources.txt,
+one line per recipe:
   <skill line> <recipe spell> trainer <skill the trainer teaches it at>
   <skill line> <recipe spell> item <name of the item that teaches it>
 make_sources.py uses it to check the "probably taught by a trainer" guesses
@@ -74,6 +76,7 @@ def same_effect(sid, effect):
 
 
 rows, enchants_unmatched = [], 0
+collect = {}  # where to get each recipe, for the missing recipes list
 for name, line in PAGES.items():
     ours = {sid for (l, sid) in colors if l == line}
     by_look = {}
@@ -93,6 +96,22 @@ for name, line in PAGES.items():
         if sid not in ours:
             continue
         src = r.get("source")
+        c = {}
+        if src:
+            c["n"] = src.get("n")
+            if src.get("cost"): c["cost"] = [src["cost"].get("currency"), src["cost"].get("amount")]
+            if src.get("vendors"):
+                c["v"] = [[v.get("npc"), v.get("zone"), v.get("side") or "", v.get("price")] for v in src["vendors"]][:8]
+            if src.get("drops"):
+                drops = sorted(src["drops"], key=lambda x: -(x.get("chance") or 0))
+                c["d"] = [[x.get("npc"), x.get("zone"), x.get("chance")] for x in drops[:3]]
+                c["dn"] = len(src["drops"])
+            if src.get("quests"):
+                c["q"] = [[x.get("name"), x.get("zone"), x.get("side") or "", x.get("level")] for x in src["quests"]][:3]
+            for k in ("objects", "places", "world"):
+                if src.get(k): c["o"] = k
+        if src is None or src.get("trainers"): c["t"] = 1
+        collect.setdefault(str(line), {})[str(sid)] = c
         if src is None or src.get("trainers"):
             rows.append((line, sid, "trainer", str(r.get("learn") or "")))
         elif src.get("n"):
@@ -104,4 +123,5 @@ with open(out, "w", encoding="utf-8") as f:
     f.write("# <skill line> <recipe spell> trainer <skill it's taught at> | item <item that teaches it>\n")
     for line, sid, kind, item in sorted(set(rows)):
         f.write(f"{line} {sid} {kind}" + (f" {item}" if item else "") + "\n")
+json.dump(collect, open(os.path.join(HERE, "data", "forever_collect.json"), "w", encoding="utf-8"), separators=(",", ":"), sort_keys=True)
 print(len(set(rows)), "recipes written;", enchants_unmatched, "enchants not matched")

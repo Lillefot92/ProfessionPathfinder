@@ -1,10 +1,17 @@
 # Changelog
 
-## 1.3.2
+## 1.4.0
 
-Mining: when to smelt.
+Recipes you're missing, and when to smelt.
 
-- With no profession window open, `/ppf` now shows smelting under Mining: which smelts you know that give skill right now (by color), a smelt a trainer can teach you now (with a map pin), or the next one and the skill it needs
+- New: the recipes you're missing. Once a profession reaches 300, its window shows every recipe your character doesn't know yet, and how to get each one, easiest first:
+  - Ready to learn now (a trainer, a recipe in your bags or on another character)
+  - Vendors (with zone and price), Merchant's Favor, and plans that need reputation (with the standing needed)
+  - Quest rewards (the quest, where it starts and its level), drops (which creatures, and how likely), holiday vendors, and recipes taught by an NPC out in the world
+  - "You know 40 of 116" at the top. Hover a recipe for every way to get it, left-click to open it, right-click to pin where to get it. Scroll with the mouse wheel
+  - Below 300 the "Missing" button at the bottom of the window shows the same list (and "Plan" takes you back)
+  - Left out: recipes only the other faction can get, other specializations' recipes, and recipes that aren't in WoW Forever. Where the addon's own data has no source for a recipe, it uses wow.gg's WoW Forever lists (vendors, drops and quests). These are only shown in this list, never planned
+- Mining: with no profession window open, `/ppf` now shows smelting under Mining: which smelts you know that give skill right now (by color), a smelt a trainer can teach you now (with a map pin), or the next one and the skill it needs
 - A chat reminder, once each, when you can learn a new smelt
 - Smelts now use the skill a trainer actually teaches them at (from wow.gg's WoW Forever lists): Smelt Tin and Bronze at 65, Silver at 75, Iron at 125, Gold at 155. Before, Smelt Tin said 50 (before the trainer has it), and Silver, Iron and Gold came too late, so easy skill-ups were missed. They're confirmed trainer recipes, so they read "(learn)" instead of "(learn?)"
 - Smelt Dark Iron is no longer planned: it needs the Black Forge in Blackrock Depths

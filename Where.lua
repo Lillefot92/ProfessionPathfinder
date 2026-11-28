@@ -381,6 +381,255 @@ function SP.SourceText(s)
 	return item
 end
 
+---------------------------------------------------------------------------
+-- Recipes you're missing (once you've reached 300, or from the window's
+-- button): what this character doesn't know yet in the open profession and
+-- how to get each one, easiest first.
+---------------------------------------------------------------------------
+SP.MISSING_ORDER = { "now", "trainer", "vendor", "favor", "rep", "quest", "drop", "ah", "world", "seasonal", "unknown" }
+SP.MISSING_TITLES = {
+	now = "Ready to learn now", trainer = "From a trainer, at a higher skill", vendor = "Buy from a vendor",
+	favor = "Buy with Merchant's Favor", rep = "Needs reputation", quest = "Quest rewards", drop = "Drops",
+	ah = "Auction House", world = "Taught by an NPC out in the world", seasonal = "Holiday vendors (only during the event)",
+	unknown = "Source not known yet",
+}
+
+-- Quest starters you can talk to (your faction), nearest first
+local function QuestStarters(qid)
+	local info = SP.QUEST_INFO and SP.QUEST_INFO[qid]
+	if not info then return nil, nil end
+	return SP.SortByDistance(info[3]), info
+end
+
+local function PickSource(prof, id, srcs)
+	-- easiest first: bags, an alt, a vendor you can buy from now, Favor,
+	-- reputation, a quest, a drop, the Auction House
+	local RANK = { bags = 1, alt = 2, vendor = 3, favor = 4, rep = 5, quest = 6, drop = 7, object = 8, ah = 9 }
+	local best
+	for _, src in ipairs(srcs) do
+		local usable = true
+		if src.kind == "quest" then
+			local starters, info = QuestStarters(src.quest)
+			-- a quest only the other faction can start
+			if info and #info[3] > 0 and #starters == 0 then usable = false end
+			src.starter, src.info = starters and starters[1], info
+		end
+		if usable and RANK[src.kind] and (not best or RANK[src.kind] < RANK[best.kind]) then best = src end
+	end
+	return best
+end
+
+-- The nearest trainer for a recipe; some trainers are only known for the
+-- lower ranks (Cooking), so fall back to them
+local function NearestTrainer(prof, at)
+	if not SP.RecipeTrainer then return nil end
+	for _, lvl in ipairs({ at or 1, 225, 150, 75 }) do
+		if lvl <= (at or 1) then
+			local t = SP.RecipeTrainer(prof.name, lvl)
+			if t then return t end
+		end
+	end
+end
+
+-- From SP.COLLECT (wow.gg): recipes the rest of the data has no source for
+local function MySide(side)
+	local f = UnitFactionGroup and UnitFactionGroup("player")
+	return side == nil or side == "" or (side == "h" and f == "Horde") or (side == "a" and f == "Alliance")
+end
+
+local function Pct(x) return x and (x >= 1 and string.format("%d%%", x) or string.format("%.1f%%", x)) or "?" end
+
+local function CollectEntry(prof, e, c)
+	local item = c.n or "the recipe"
+	if c.t then
+		local d = SP.DATA[prof.id] and SP.DATA[prof.id][e.id]
+		local at = d and d[1] or 1
+		if at > 300 then return nil end  -- needs more than 300: not in Forever
+		local t = NearestTrainer(prof, at)
+		e.group = at <= (prof.skill or 0) and "now" or "trainer"
+		e.at, e.pin, e.where = at, t, t and t.zone or "a trainer"
+		table.insert(e.tips, 1, "A trainer teaches it from about skill " .. at .. (t and (": nearest " .. t.name .. " in " .. SP.NpcPlace(t)) or "") .. ".")
+		return e
+	end
+	local lines, group, where = {}, nil, nil
+	local mine = 0
+	for _, v in ipairs(c.v or {}) do
+		if MySide(v[3]) then
+			mine = mine + 1
+			if mine <= 3 then
+				local cost = c.c and (" for " .. c.c[2] .. " " .. c.c[1]) or (v[4] and (" for about " .. SP.Money(v[4])) or "")
+				lines[#lines + 1] = "Buy " .. item .. " from " .. v[1] .. " (" .. (v[2] or "?") .. ")" .. cost .. "."
+			end
+			group = group or ((c.c and c.c[1] == "Merchant's Favor") and "favor" or "vendor")
+			where = where or v[2]
+		end
+	end
+	local quests = 0
+	for _, q in ipairs(c.q or {}) do
+		if MySide(q[3]) then
+			quests = quests + 1
+			lines[#lines + 1] = item .. " is a reward from the quest " .. (q[1] or "?") .. " (" .. (q[2] or "?") .. (q[4] and (", level " .. q[4]) or "") .. ")."
+			group = group or "quest"
+			where = where or q[2]
+		end
+	end
+	if c.d then
+		local names = {}
+		for _, d in ipairs(c.d) do names[#names + 1] = d[1] .. " (" .. (d[2] or "?") .. (d[3] and (", " .. Pct(d[3])) or "") .. ")" end
+		lines[#lines + 1] = item .. " drops from " .. table.concat(names, ", ")
+			.. ((c.dn or 0) > #c.d and (" and " .. (c.dn - #c.d) .. " more") or "") .. "."
+		group = group or "drop"
+		where = where or c.d[1][2]
+	end
+	if c.o then
+		lines[#lines + 1] = item .. " is found in chests or objects in the world."
+		group = group or "drop"
+	end
+	-- only the other faction can buy it or do the quest
+	if not group then return nil end
+	e.group, e.where = group, where
+	for i, l in ipairs(lines) do table.insert(e.tips, i, l) end
+	e.tips[#e.tips + 1] = "|cff999999Source from wow.gg's WoW Forever lists.|r"
+	return e
+end
+
+function SP.MissingEntry(prof, id, r)
+	local line = prof.id
+	local e = { id = id, name = r and r.name or (C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(id)) or ("recipe " .. id),
+		icon = r and r.icon, tips = {} }
+	local d = SP.DATA[line] and SP.DATA[line][id]
+	if d then e.tips[#e.tips + 1] = "|cff999999Skill-ups: orange until " .. d[1] .. ", gray from " .. d[2] .. ".|r" end
+	if SP.NPC_TAUGHT and SP.NPC_TAUGHT[id] then
+		e.group, e.where = "world", SP.NPC_TAUGHT[id]
+		table.insert(e.tips, 1, "Taught by " .. SP.NPC_TAUGHT[id] .. ".")
+		return e
+	end
+	local at, how = SP.LearnAt(id, line)
+	if how == "trainer" or how == "maybe" then
+		if (at or 0) > 300 then return nil end  -- needs more than 300: not in Forever
+		local t = NearestTrainer(prof, at)
+		e.group = (at or 0) <= (prof.skill or 0) and "now" or "trainer"
+		e.at, e.pin = at, t
+		e.where = t and t.zone or "a trainer"
+		local sure = how == "trainer" or SP.TrainerChecked(id, line)
+		table.insert(e.tips, 1, (sure and "A trainer teaches it" or "Probably a trainer teaches it") .. " from skill " .. (at or "?")
+			.. (t and (": nearest " .. t.name .. " in " .. SP.NpcPlace(t)) or "") .. ".")
+		return e
+	end
+	local c = SP.COLLECT and SP.COLLECT[id]
+	if c and not (SP.RECIPE_ITEMS and SP.RECIPE_ITEMS[id]) then return CollectEntry(prof, e, c) end
+	local srcs = SP.RecipeSources(id)
+	local best = PickSource(prof, id, srcs)
+	local at_ = 0
+	for _, src in ipairs(srcs) do
+		if src.kind ~= "quest" or src.starter or not src.info or #src.info[3] == 0 then
+			at_ = at_ + 1
+			table.insert(e.tips, at_, SP.SourceText(src))
+		end
+	end
+	if not best then
+		-- the recipe item exists but only the other faction can buy it: not for you
+		local rows = SP.RECIPE_ITEMS and SP.RECIPE_ITEMS[id]
+		if rows then
+			-- sold only during a holiday (in your faction's cities)
+			local CITY = { Horde = { Orgrimmar = true, ["Thunder Bluff"] = true, Undercity = true },
+				Alliance = { ["Stormwind City"] = true, Ironforge = true, Darnassus = true } }
+			local mine = CITY[UnitFactionGroup and UnitFactionGroup("player") or ""] or {}
+			for _, row in ipairs(rows) do
+				local list = SP.SortByDistance(row[5])
+				table.sort(list, function(a, b) return (mine[a.zone] and 1 or 0) > (mine[b.zone] and 1 or 0) end)
+				for _, npc in ipairs(list) do
+					if npc.event then
+						e.group, e.pin, e.where = "seasonal", npc, npc.zone
+						table.insert(e.tips, 1, "Sold by " .. npc.name .. " (" .. SP.NpcPlace(npc) .. ") during the holiday.")
+						return e
+					end
+				end
+			end
+			for _, row in ipairs(rows) do
+				local vendorsOther = row[5] and #row[5] > 0 and #SP.SortByDistance(row[5]) == 0
+				local questsOther = row[9] and #row[9] > 0
+				for _, qid in ipairs(row[9] or {}) do
+					local starters, info = QuestStarters(qid)
+					if not (info and #info[3] > 0 and #starters == 0) then questsOther = false end
+				end
+				local onlyThose = (#(row[5] or {}) == 0 or vendorsOther) and (#(row[9] or {}) == 0 or questsOther)
+					and (row[7] or 0) == 0 and (row[8] or 0) == 0
+				if onlyThose and (vendorsOther or questsOther) then return nil end
+			end
+		end
+		e.group = "unknown"
+		if #e.tips <= 1 then table.insert(e.tips, 1, "No source in the addon's data yet.") end
+		return e
+	end
+	e.source = best
+	local kind = best.kind
+	e.group = (kind == "bags" or kind == "alt") and "now" or (kind == "object" and "drop") or kind
+	if kind == "vendor" or kind == "favor" or kind == "rep" then
+		e.pin, e.where = best.npc, best.npc.zone
+	elseif kind == "quest" then
+		local info = best.info
+		e.pin = best.starter
+		e.where = info and info[1] > 0 and ("level " .. info[1]) or (best.starter and best.starter.zone)
+		if best.starter then
+			e.tips[#e.tips + 1] = "Starts at " .. best.starter.name .. " (" .. SP.NpcPlace(best.starter) .. ")"
+				.. (info and info[2] > 0 and (", from level " .. info[2]) or "") .. "."
+		end
+	elseif kind == "drop" then
+		local first = best.drops and best.drops[1]
+		if best.count <= 5 and first then e.pin, e.where = first, first.zone else e.where = best.count .. " creatures" end
+		if not best.bop then e.tips[#e.tips + 1] = "|cff999999It can be traded: check the Auction House too.|r" end
+	elseif kind == "ah" then
+		e.where = SP.Money(best.price)
+	elseif kind == "bags" then
+		e.where = "in your bags"
+	elseif kind == "alt" then
+		e.where = "on " .. best.alt.name
+	end
+	return e
+end
+
+function SP.MissingRecipes(prof)
+	local out = { known = 0, total = 0, otherSpec = 0, groups = {} }
+	local T = C_TradeSkillUI
+	local data = prof and SP.DATA and SP.DATA[prof.id]
+	if not (T and T.GetAllRecipeIDs and T.GetRecipeInfo and data) then return out end
+	local ok, ids = pcall(T.GetAllRecipeIDs)
+	if not ok or type(ids) ~= "table" then return out end
+	local mine = SP.MySpecs and SP.MySpecs() or {}
+	local seen = {}
+	for _, id in ipairs(ids) do
+		if data[id] and not seen[id] then
+			seen[id] = true
+			local okI, r = pcall(T.GetRecipeInfo, id)
+			if okI and type(r) == "table" and not r.isSalvageRecipe then
+				local spec = SP.SPEC_RECIPES and SP.SPEC_RECIPES[id]
+				if SP.NOT_LISTED and SP.NOT_LISTED[id] and not r.learned then
+					out.unlisted = (out.unlisted or 0) + 1  -- not in WoW Forever
+				elseif r.learned then
+					out.total, out.known = out.total + 1, out.known + 1
+				elseif spec and not mine[spec] then
+					out.otherSpec = out.otherSpec + 1  -- another specialization's recipe
+				else
+					local e = SP.MissingEntry(prof, id, r)
+					if e then
+						out.total = out.total + 1
+						out.groups[e.group] = out.groups[e.group] or {}
+						table.insert(out.groups[e.group], e)
+					end
+				end
+			end
+		end
+	end
+	for _, list in pairs(out.groups) do
+		table.sort(list, function(a, b)
+			if (a.at or 0) ~= (b.at or 0) then return (a.at or 0) < (b.at or 0) end
+			return a.name < b.name
+		end)
+	end
+	return out
+end
+
 -- Where to learn a planned recipe (a plan step, prep entry or toLearn
 -- entry): text for notes and chat, and the NPC to pin (if any)
 function SP.LearnWhere(prof, e)
