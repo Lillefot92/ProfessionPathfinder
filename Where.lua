@@ -437,7 +437,7 @@ local function MySide(side)
 	return side == nil or side == "" or (side == "h" and f == "Horde") or (side == "a" and f == "Alliance")
 end
 
-local function Pct(x) return x and (x >= 1 and string.format("%d%%", x) or string.format("%.1f%%", x)) or "?" end
+local function Pct(x) return x and (x >= 1 and string.format("%d%%", math.floor(x + 0.5)) or string.format("%.1f%%", x)) or "?" end
 
 local function CollectEntry(prof, e, c)
 	local item = c.n or "the recipe"
@@ -457,8 +457,9 @@ local function CollectEntry(prof, e, c)
 		if MySide(v[3]) then
 			mine = mine + 1
 			if mine <= 3 then
-				local cost = c.c and (" for " .. c.c[2] .. " " .. c.c[1]) or (v[4] and (" for about " .. SP.Money(v[4])) or "")
-				lines[#lines + 1] = "Buy " .. item .. " from " .. v[1] .. " (" .. (v[2] or "?") .. ")" .. cost .. "."
+				local cost = (c.c and c.c[2] and (" for " .. c.c[2] .. " " .. (c.c[1] or "currency")))
+					or (v[4] and (" for about " .. SP.Money(v[4]))) or ""
+				lines[#lines + 1] = "Buy " .. item .. " from " .. (v[1] or "a vendor") .. " (" .. (v[2] or "?") .. ")" .. cost .. "."
 			end
 			group = group or ((c.c and c.c[1] == "Merchant's Favor") and "favor" or "vendor")
 			where = where or v[2]
@@ -475,7 +476,7 @@ local function CollectEntry(prof, e, c)
 	end
 	if c.d then
 		local names = {}
-		for _, d in ipairs(c.d) do names[#names + 1] = d[1] .. " (" .. (d[2] or "?") .. (d[3] and (", " .. Pct(d[3])) or "") .. ")" end
+		for _, d in ipairs(c.d) do names[#names + 1] = (d[1] or "?") .. " (" .. (d[2] or "?") .. (d[3] and (", " .. Pct(d[3])) or "") .. ")" end
 		lines[#lines + 1] = item .. " drops from " .. table.concat(names, ", ")
 			.. ((c.dn or 0) > #c.d and (" and " .. (c.dn - #c.d) .. " more") or "") .. "."
 		group = group or "drop"

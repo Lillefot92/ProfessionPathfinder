@@ -86,18 +86,23 @@ end
 bs = SP.MissingRecipes({ name = "Blacksmithing", id = 164, skill = 300, max = 300 })
 assert(bs.otherSpec > 0 and not Find(bs, 9954), "Armorsmith/Weaponsmith recipes left out without the specialization")
 print("other specializations left out: " .. bs.otherSpec .. ", Blacksmithing missing: " .. bs.total)
+-- every profession, both factions: the list and the window build without errors
+for _, fac in ipairs({ "Horde", "Alliance" }) do
+	FACTION = fac
+	for line, name in pairs({ [129] = "First Aid", [164] = "Blacksmithing", [165] = "Leatherworking", [171] = "Alchemy",
+		[185] = "Cooking", [186] = "Mining", [197] = "Tailoring", [202] = "Engineering", [333] = "Enchanting" }) do
+		C_TradeSkillUI.GetAllRecipeIDs = function()
+			local ids = {}
+			for id in pairs(SP.DATA[line]) do ids[#ids + 1] = id end
+			return ids
+		end
+		local p = { name = name, id = line, skill = 300, max = 300 }
+		local list = SP.MissingRecipes(p)
+		assert(list.total > 10, name)
+		SP.UI.profView = nil
+		SP.UI:Show(p, { steps = {}, prep = {}, shopping = {}, total = 0, toLearn = {}, atCap = true, reached = 300 })
+		assert(SP.UI.missingRows and #SP.UI.missingRows > 5, name)
+	end
+end
 ''')
 print("missing ok")
-if os.environ.get("PP_SHOW_UNKNOWN"):
-    import json
-    names = {}
-    for i, n in re.findall(r'\[(\d+)\] = "([^"]+)"', open("/home/claude/export/sv.lua", encoding="utf-8", errors="replace").read()):
-        names.setdefault(int(i), n)
-    gg = json.load(open("/home/claude/wowgg/wowgg.json"))["cooking"]
-    lua.execute("C_TradeSkillUI.GetAllRecipeIDs = function() local ids = {} for id in pairs(ProfessionPathfinder.DATA[185]) do ids[#ids + 1] = id end return ids end")
-    m = lua.eval("ProfessionPathfinder.MissingRecipes({ name = 'Cooking', id = 185, skill = 300, max = 300 })")
-    for e in (m.groups["unknown"] or {}).values():
-        r = gg.get(str(e.id))
-        print(e.id, names.get(e.id), lua.eval("function(id) local d = ProfessionPathfinder.DATA[185][id] return d[3] end")(e.id),
-              "| wow.gg:", (r.get("source") or {}).get("n") if r and r.get("source") else ("trainer" if r else "NOT ON WOW.GG"),
-              list((r.get("source") or {}).keys()) if r and r.get("source") else "")
