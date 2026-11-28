@@ -191,9 +191,10 @@ function SP.LearnAt(id, line)
 	if not d and SP.DATA then
 		for _, recipes in pairs(SP.DATA) do if recipes[id] then d = recipes[id] break end end
 	end
-	if d and d[3] ~= 1 and line and SP.MaybeTrainer(id, line) and d[1] > SP.TrainerSeenUpTo(line) then
+	local at = d and line and SP.TRAINER_LEARN and SP.TRAINER_LEARN[line] and SP.TRAINER_LEARN[line][id] or (d and d[1])
+	if d and d[3] ~= 1 and line and SP.MaybeTrainer(id, line) and at > SP.TrainerSeenUpTo(line) then
 		-- no item teaches it, and no trainer window has shown that high yet
-		return d[1], "maybe"
+		return at, "maybe"
 	end
 	if d then return d[3] == 1 and 1 or d[1], d[3] == 1 and "start" or "yellow" end
 end

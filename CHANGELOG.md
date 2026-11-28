@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.2
+
+Mining: when to smelt.
+
+- With no profession window open, `/ppf` now shows smelting under Mining: which smelts you know that give skill right now (by color), a smelt a trainer can teach you now (with a map pin), or the next one and the skill it needs
+- A chat reminder, once each, when you can learn a new smelt
+- Smelts now use the skill a trainer actually teaches them at (from wow.gg's WoW Forever lists): Smelt Tin and Bronze at 65, Silver at 75, Iron at 125, Gold at 155. Before, Smelt Tin said 50 (before the trainer has it), and Silver, Iron and Gold came too late, so easy skill-ups were missed. They're confirmed trainer recipes, so they read "(learn)" instead of "(learn?)"
+- Smelt Dark Iron is no longer planned: it needs the Black Forge in Blackrock Depths
+
 ## 1.3.1
 
 Fewer wrong trips to the trainer.

@@ -1217,7 +1217,31 @@ function UI:ShowGathering()
 				Add(nil, "  Best skill-ups: " .. table.concat(best, ", "), nil,
 					{ "What you can gather", "Orange always gives a point, yellow usually, green sometimes, gray never.", table.concat(all, ", ") })
 			end
-		elseif p.name == "Skinning" then
+		end
+		if p.name == "Mining" then
+			local sm = SP.Smelting(p.skill)
+			local COLOR = { orange = "ff8040", yellow = "ffff00", green = "40bf40" }
+			if #sm.skillUps > 0 then
+				local names = {}
+				for i = 1, math.min(2, #sm.skillUps) do
+					local s = sm.skillUps[i]
+					names[#names + 1] = "|cff" .. COLOR[s.color] .. s.name .. "|r"
+				end
+				Add(nil, "  Smelt for skill: " .. table.concat(names, ", "), nil,
+					{ "Smelting", "Smelting gives Mining skill too, without leaving town. Orange always gives a point, yellow usually, green sometimes." })
+			end
+			local learn = sm.learnNow[#sm.learnNow]
+			if learn then
+				local where = learn.trainer and (learn.trainer.name .. " in " .. SP.NpcPlace(learn.trainer)) or "a Mining trainer"
+				Add(nil, "  |cffff8040Learn " .. learn.name .. "|r now from " .. where, nil,
+					{ "Learn " .. learn.name, "A Mining trainer teaches it from skill " .. learn.at .. ". It gives skill until " .. learn.gray .. ".",
+						learn.trainer and "|cff66bbffClick to pin " .. learn.trainer.name .. " on your map.|r" or nil }, learn.trainer)
+			elseif sm.next then
+				Add(nil, "  |cffaaaaaaNext smelt: " .. sm.next.name .. " at " .. sm.next.at .. "|r", nil,
+					{ sm.next.name, "A Mining trainer teaches it from skill " .. sm.next.at .. "." })
+			end
+		end
+		if p.name == "Skinning" and not g.nodes then
 			local lvl = SP.SkinLevel(p.skill)
 			Add(nil, string.format("  Skin beasts up to level |cffffffff%d|r (best: %d-%d)", lvl, math.max(1, lvl - 3), lvl), nil,
 				{ "Skinning", "Skill needed: level 1-10 beasts need 1, levels 11-19 need (level - 10) x 10, level 20 and up need level x 5.",

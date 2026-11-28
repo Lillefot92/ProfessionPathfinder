@@ -124,6 +124,57 @@ SP.RANKS = {
 	{ at = 200, cap = 225, next = 300, name = "Artisan", level = 35, gatherLevel = 25 },
 }
 
+-- Smelting (Mining): which smelts you know, which give skill now, which a
+-- trainer can teach you now, and the next one.
+-- { known = {...}, skillUps = {...}, learnNow = {...}, next = {...} }; each
+-- entry { id, name, at, yellow, gray, color, trainer }
+local function SmeltName(id)
+	local n = C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(id)
+	if not n and GetSpellInfo then n = GetSpellInfo(id) end
+	return n
+end
+
+function SP.Smelting(skill)
+	local out = { known = {}, skillUps = {}, learnNow = {}, next = nil }
+	local data = SP.DATA and SP.DATA[186]
+	if not data then return out end
+	local saved = {}
+	local me = SP.MyKey and SP.MyKey()
+	for _, r in ipairs(SP.db and SP.db.known and me and SP.db.known[me] and SP.db.known[me].Mining or {}) do saved[r.id] = true end
+	local list = {}
+	for id, d in pairs(data) do
+		local at, how = SP.LearnAt(id, 186)
+		if at and (how == "start" or how == "trainer" or how == "maybe") then
+			local name = SmeltName(id)
+			if name then
+				list[#list + 1] = { id = id, name = name, at = at, yellow = d[1], gray = d[2],
+					known = saved[id] or d[3] == 1 or SP.KnowsSpell(id) }
+			end
+		end
+	end
+	table.sort(list, function(a, b) if a.at ~= b.at then return a.at < b.at end return a.id < b.id end)
+	for _, s in ipairs(list) do
+		if skill < s.gray then
+			s.color = skill < s.yellow and "orange" or (skill < (s.yellow + s.gray) / 2 and "yellow" or "green")
+		end
+		if s.known then
+			out.known[#out.known + 1] = s
+			if s.color then out.skillUps[#out.skillUps + 1] = s end
+		elseif s.at <= skill then
+			if s.color then
+				s.trainer = SP.RecipeTrainer and SP.RecipeTrainer("Mining", s.at)
+				out.learnNow[#out.learnNow + 1] = s
+			end
+		elseif not out.next then
+			out.next = s
+		end
+	end
+	-- best skill-ups first
+	local rank = { orange = 1, yellow = 2, green = 3 }
+	table.sort(out.skillUps, function(a, b) return rank[a.color] < rank[b.color] end)
+	return out
+end
+
 -- Highest beast level you can skin
 function SP.SkinLevel(skill)
 	if skill < 100 then return math.floor(skill / 10) + 10 end

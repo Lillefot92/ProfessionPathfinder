@@ -652,6 +652,7 @@ end
 -- specialist can learn.
 ---------------------------------------------------------------------------
 local function KnowsSpell(id)
+	if not id then return false end
 	for _, try in ipairs({
 		function() return IsPlayerSpell(id) end,
 		function() return C_SpellBook.IsSpellKnown(id) end,
@@ -662,6 +663,7 @@ local function KnowsSpell(id)
 	end
 	return false
 end
+SP.KnowsSpell = KnowsSpell
 
 -- Specializations this character has (spell IDs), from the spell book and
 -- from specialist recipes it already knows
@@ -812,6 +814,15 @@ function SP.CheckAllRanks()
 	local c = SP.db.chars and SP.db.chars[MyKey()]
 	for name, p in pairs(c and c.profs or {}) do
 		pcall(SP.CheckReminders, { name = name, skill = p.skill or 0, max = p.max or 0 })
+		if name == "Mining" and SP.Smelting then
+			-- a new smelt you can learn (once each)
+			pcall(function()
+				for _, s in ipairs(SP.Smelting(p.skill or 0).learnNow) do
+					SP.RemindOnce("smelt:" .. s.id, "you can learn " .. s.name .. " (Mining) now"
+						.. (s.trainer and (" from " .. s.trainer.name .. " in " .. SP.NpcPlace(s.trainer)) or " from a Mining trainer") .. ".")
+				end
+			end)
+		end
 	end
 end
 

@@ -210,10 +210,12 @@ for line, rec in DATA.items():
 # checks the trainer guesses, and links items whose names differ from the recipe
 GG = {}
 GG_ITEM = {}
+GG_LEARN = {}  # skill a trainer teaches it at (wow.gg)
 for _l in open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "forever_recipe_sources.txt"), encoding="utf-8"):
     if _l.startswith("#") or not _l.strip(): continue
     _p = _l.rstrip("\n").split(" ", 3)
     GG[(int(_p[0]), int(_p[1]))] = _p[2]
+    if _p[2] == "trainer" and len(_p) > 3 and _p[3].isdigit(): GG_LEARN[(int(_p[0]), int(_p[1]))] = int(_p[3])
     if _p[2] == "item": GG_ITEM.setdefault((int(_p[0]), norm(_p[3])), []).append(int(_p[1]))
 
 recipes, unmatched, recipe_ids, linked = {}, [], [], set()
@@ -321,7 +323,12 @@ NPC_TAUGHT = {
     22813: "Knot Thimblejack, Dire Maul (after The Gordok Ogre Suit)",  # Gordok Ogre Suit, Tailoring
     22815: "Knot Thimblejack, Dire Maul (after The Gordok Ogre Suit)",  # Gordok Ogre Suit, Leatherworking
     13028: "Henry Stern, Razorfen Downs",  # Goldthorn Tea
+    14891: "the Black Forge, Blackrock Depths",  # Smelt Dark Iron: only at the Black Forge
 }
+# Smelting: trainers teach smelts at fixed skills that don't follow the colors
+# (Smelt Tin at 65 while it's yellow from 50, Smelt Silver at 75 while orange
+# until 100), so Mining uses wow.gg's learn skill
+LEARN_FROM_GG = {186}
 maybe, checked, gg_not_trainer = {}, {}, 0
 for line, rec in DATA.items():
     for sid in rec:
@@ -449,6 +456,10 @@ with open(OUT, "w", encoding="utf-8", newline="\n") as f:
         for i, sid in enumerate(sorted(checked[line])):
             f.write(("\n\t\t" if i % 14 == 0 else " ") + "%d," % sid)
         f.write("\n\t},\n")
+    f.write("}\n\n-- Skill a trainer teaches it at, where that isn't the yellow skill (smelting; wow.gg)\nSP.TRAINER_LEARN = {\n")
+    for line in sorted(LEARN_FROM_GG):
+        learn_ids = sorted(sid for sid in checked.get(line, []) if (line, sid) in GG_LEARN)
+        f.write("\t[%d] = { %s },\n" % (line, " ".join("[%d]=%d," % (sid, GG_LEARN[(line, sid)]) for sid in learn_ids)))
     f.write("}\n\n-- Every recipe item (for /ppf export)\nSP.RECIPE_ITEM_IDS = {")
     for i, iid in enumerate(sorted(recipe_ids)):
         f.write(("\n\t" if i % 16 == 0 else " ") + "%d," % iid)

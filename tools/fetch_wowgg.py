@@ -1,7 +1,7 @@
 """Where each recipe is learned, from wow.gg's WoW Forever profession lists.
 
 Writes tools/data/forever_recipe_sources.txt, one line per recipe:
-  <skill line> <recipe spell> trainer
+  <skill line> <recipe spell> trainer <skill the trainer teaches it at>
   <skill line> <recipe spell> item <name of the item that teaches it>
 make_sources.py uses it to check the "probably taught by a trainer" guesses
 and to link recipe items whose names don't match the recipe ("Recipe: Mithril
@@ -15,7 +15,7 @@ materials (wago.tools SpellReagents.csv).
 """
 import csv, json, os, re, sys, urllib.request
 
-PAGES = {"first-aid": 129, "blacksmithing": 164, "leatherworking": 165, "alchemy": 171, "cooking": 185,
+PAGES = {"mining": 186, "first-aid": 129, "blacksmithing": 164, "leatherworking": 165, "alchemy": 171, "cooking": 185,
          "tailoring": 197, "engineering": 202, "enchanting": 333}
 DATA_LUA, REAGENTS, NAMES = sys.argv[1:4]
 CACHE = sys.argv[4] if len(sys.argv) > 4 else None
@@ -94,14 +94,14 @@ for name, line in PAGES.items():
             continue
         src = r.get("source")
         if src is None or src.get("trainers"):
-            rows.append((line, sid, "trainer", ""))
+            rows.append((line, sid, "trainer", str(r.get("learn") or "")))
         elif src.get("n"):
             rows.append((line, sid, "item", src["n"]))
 
 out = os.path.join(HERE, "data", "forever_recipe_sources.txt")
 with open(out, "w", encoding="utf-8") as f:
     f.write("# Where WoW Forever recipes are learned, from wow.gg (tools/fetch_wowgg.py)\n")
-    f.write("# <skill line> <recipe spell> trainer | item <item that teaches it>\n")
+    f.write("# <skill line> <recipe spell> trainer <skill it's taught at> | item <item that teaches it>\n")
     for line, sid, kind, item in sorted(set(rows)):
         f.write(f"{line} {sid} {kind}" + (f" {item}" if item else "") + "\n")
 print(len(set(rows)), "recipes written;", enchants_unmatched, "enchants not matched")
